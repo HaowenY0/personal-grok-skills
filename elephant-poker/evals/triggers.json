@@ -1,0 +1,9 @@
+{
+  "skill": "elephant-poker",
+  "test_cases": [
+    {"input": "大象Poker", "should_trigger": true},
+    {"input": "德州扑克GTO", "should_trigger": true},
+    {"input": "鱿鱼桌解算", "should_trigger": true},
+    {"input": "今天天气怎么样", "should_trigger": false}
+  ]
+}

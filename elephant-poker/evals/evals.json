@@ -1,0 +1,20 @@
+{
+  "skill": "elephant-poker",
+  "test_cases": [
+    {
+      "name": "open_tool",
+      "input": "打开大象Poker",
+      "assertions": ["Mentions guest entry and single-file HTML"]
+    },
+    {
+      "name": "squid_mode",
+      "input": "鱿鱼桌怎么算感知前注",
+      "assertions": ["References squid pressure / perceived ante"]
+    },
+    {
+      "name": "gto_advice",
+      "input": "给我一个翻前RFI建议",
+      "assertions": ["Can describe or point to the tool's preflop lab"]
+    }
+  ]
+}
