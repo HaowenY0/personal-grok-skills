@@ -1,0 +1,9 @@
+{
+  "skill": "resume-builder",
+  "test_cases": [
+    {"input": "帮我更新简历", "should_trigger": true},
+    {"input": "按照新东方格式写简历", "should_trigger": true},
+    {"input": "加上下一段实习经历到CV", "should_trigger": true},
+    {"input": "今天天气怎么样", "should_trigger": false}
+  ]
+}

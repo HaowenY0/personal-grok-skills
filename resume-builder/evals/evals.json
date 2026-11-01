@@ -1,0 +1,20 @@
+{
+  "skill": "resume-builder",
+  "test_cases": [
+    {
+      "name": "update_with_dewu",
+      "input": "帮我更新简历，加上得物女装达人运营的经历",
+      "assertions": ["Includes Dewu internship with data analysis and merchant operations", "Uses Chinese", "Quantifies or structures achievements"]
+    },
+    {
+      "name": "new_oriental_format",
+      "input": "按照新东方简历格式重新整理我的实习经历",
+      "assertions": ["References preferred format", "Lists internships reverse chronological", "Focuses on metrics"]
+    },
+    {
+      "name": "english_version",
+      "input": "Generate an English version of my resume for international applications",
+      "assertions": ["Produces English resume", "Translates key achievements accurately", "Keeps professional tone"]
+    }
+  ]
+}

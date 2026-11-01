@@ -1,0 +1,20 @@
+{
+  "skill": "official-document",
+  "test_cases": [
+    {
+      "name": "enrollment_proof",
+      "input": "帮我生成一份UNSW在读证明，写预计2027 T3毕业，不要提休学",
+      "assertions": ["Produces formal Chinese 在读证明", "Includes ZID 5580659 and program", "Omits any mention of leave or suspension", "States graduation 2027 T3"]
+    },
+    {
+      "name": "english_certificate",
+      "input": "需要一份英文版的在读证明",
+      "assertions": ["Provides English version", "Keeps formal tone", "Accurate translation of key facts"]
+    },
+    {
+      "name": "custom_letter",
+      "input": "写一封给学校的正式说明信",
+      "assertions": ["Uses official Chinese letter format", "Professional and concise"]
+    }
+  ]
+}

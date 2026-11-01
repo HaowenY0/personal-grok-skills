@@ -1,0 +1,9 @@
+{
+  "skill": "official-document",
+  "test_cases": [
+    {"input": "生成在读证明", "should_trigger": true},
+    {"input": "帮我写一份学籍证明", "should_trigger": true},
+    {"input": "需要官方文件给学校", "should_trigger": true},
+    {"input": "今天吃什么", "should_trigger": false}
+  ]
+}
