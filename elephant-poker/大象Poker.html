@@ -1,0 +1,2289 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>大象Poker</title>
+<style>
+:root{
+  --bg:#0c0d10; --bg2:#14151a; --bg3:#1c1e26;
+  --fg:#f3f1ea; --muted:#b4b0a6; --dim:#8a8680;
+  --line:rgba(243,241,234,.12); --line2:rgba(243,241,234,.22);
+  --accent:#d7ddd8; --accent-fg:#0c0d10;
+  --ok:#5ee0a0; --warn:#e8c07a; --bad:#f07178; --info:#7eb6ff;
+  --r-xs:4px; --r-sm:8px; --r-md:12px; --r-lg:18px; --r-xl:24px;
+  --font: "Segoe UI", "PingFang SC", "Noto Sans SC", system-ui, sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font);min-height:100%}
+button,input,select,textarea{font:inherit;color:var(--fg)}
+button{cursor:pointer}
+button:not(:disabled):active{transform:scale(.98)}
+.page{display:none;max-width:1120px;margin:0 auto;padding:20px 18px 80px}
+.page.on{display:block}
+header.app{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:18px}
+.brand b{display:block;font-size:22px;letter-spacing:.04em}
+.brand span{color:var(--muted);font-size:13px}
+#fmtBadge{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+.userchip{display:none;align-items:center;gap:8px;border:1px solid var(--line);border-radius:999px;padding:6px 10px}
+.userchip.on{display:flex}
+.backbar{display:none;margin-bottom:12px}
+.backbar.on{display:block}
+.crumb{font-size:13px;color:var(--muted);margin:6px 0 14px}
+.crumb button{background:none;border:none;color:var(--fg);padding:0;text-decoration:underline;text-underline-offset:3px}
+.grid2{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.card{background:var(--bg2);border:1px solid var(--line);border-radius:var(--r-xl);padding:18px}
+.card h2{margin:0 0 6px;font-size:18px;font-weight:600}
+.card p{margin:0 0 14px;color:var(--muted);font-size:14px;line-height:1.55}
+.btn{background:var(--accent);color:var(--accent-fg);border:0;border-radius:999px;padding:10px 16px;font-weight:600;min-height:44px}
+.btn.ghost{background:transparent;color:var(--fg);border:1px solid var(--line2)}
+.btn.wide{width:100%}
+label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
+input,select{width:100%;background:var(--bg3);border:1px solid var(--line2);border-radius:var(--r-sm);padding:10px 12px;min-height:42px}
+.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:8px 0}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px}
+.kpi{background:var(--bg3);border:1px solid var(--line);border-radius:var(--r-md);padding:10px 12px}
+.kpi span{display:block;font-size:11px;color:var(--muted);letter-spacing:.08em}
+.kpi b{font-size:18px;font-variant-numeric:tabular-nums}
+.seat{display:grid;grid-template-columns:52px 1fr auto auto;gap:8px;align-items:center;padding:8px;border:1px solid var(--line);border-radius:var(--r-md);margin-bottom:6px}
+.seat.you{border-color:var(--line2);background:rgba(255,255,255,.03)}
+.seat.safe{border-color:rgba(94,224,160,.35)}
+.seat .pos{font-size:12px;color:var(--dim)}
+.pill,.youbtn,.lvtag{border:1px solid var(--line2);background:transparent;border-radius:999px;padding:6px 10px;min-height:36px;font-size:12px}
+.pill.on,.youbtn.active,.lvtag.on{background:var(--fg);color:var(--bg)}
+.cnt{display:flex;align-items:center;gap:6px}
+.cnt button{width:32px;height:32px;border-radius:8px;border:1px solid var(--line2);background:var(--bg3)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:8px 6px;border-bottom:1px solid var(--line);text-align:left}
+tr.me{background:rgba(255,255,255,.04)}
+.advice-item{border:1px solid var(--line);border-radius:var(--r-md);padding:12px 14px;margin-bottom:8px}
+.advice-item h3{margin:0 0 4px;font-size:14px}
+.advice-item p{margin:0;color:var(--muted);font-size:13px;line-height:1.5}
+.math{white-space:pre-wrap;font-family:ui-monospace,Menlo,monospace;font-size:12px;color:var(--muted);background:var(--bg3);border-radius:var(--r-md);padding:12px}
+.desk{display:grid;gap:14px;grid-template-columns:1.15fr .85fr}
+@media(max-width:860px){.desk{grid-template-columns:1fr}}
+.lvseats{display:flex;flex-wrap:wrap;gap:8px}
+.lvseat{border:1px solid var(--line);border-radius:var(--r-md);padding:8px;min-width:110px;font-size:12px}
+.lvseat.hero{border-color:var(--fg)}
+.lvseat.vil{border-color:var(--info)}
+.slots{display:flex;gap:6px;flex-wrap:wrap}
+.slot,.cd{width:52px;height:68px;border:1px dashed var(--line2);border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;background:var(--bg3)}
+.slot.on,.cd.on{outline:2px solid var(--fg);border-style:solid}
+.slot.red,.cd.red{color:#f07178}
+.cd.lock{border-style:solid}
+.cd.wait{opacity:.4}
+.picker{display:none;margin-top:8px}
+.picker.on{display:block}
+.pcards{display:flex;flex-wrap:wrap;gap:4px}
+.pcards button{width:42px;height:36px;border-radius:8px;border:1px solid var(--line);background:var(--bg3);font-size:12px}
+.pcards button.red{color:#f07178}
+.pcards button.used{opacity:.25}
+.pc{display:inline-block;min-width:34px;padding:6px 4px;margin:2px;border:1px solid var(--line);border-radius:8px;background:var(--bg3);font-size:12px;text-align:center;cursor:pointer}
+.pc.red{color:#f07178}
+.stchip{padding:4px 8px;border-radius:999px;border:1px solid var(--line);font-size:11px;color:var(--dim)}
+.stchip.on{color:var(--fg);border-color:var(--fg)}
+.stchip.done{color:var(--ok);border-color:rgba(94,224,160,.4)}
+.sz-grid,.act-grid{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.sz-grid button,.act-grid button{border:1px solid var(--line2);background:var(--bg3);border-radius:999px;padding:8px 12px;min-height:40px}
+.rec-action{font-size:32px;font-weight:700;margin:8px 0;letter-spacing:.04em}
+.rec-action.fold{color:var(--dim)}
+.rec-action.call{color:var(--info)}
+.rec-action.raise,.rec-action.jam{color:var(--ok)}
+.rec-action.mix{color:var(--warn)}
+.rec-mix{display:flex;height:10px;border-radius:99px;overflow:hidden;background:#1a2230}
+.rec-mix i{display:block;height:100%}
+.size-picks{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.size-picks span{font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:8px;padding:4px 8px}
+.size-picks span.on{border-color:var(--fg);color:var(--fg)}
+.rangelist{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:6px;max-height:220px;overflow:auto}
+.rchip{background:var(--bg3);border:1px solid var(--line);border-radius:10px;padding:7px 8px;font-size:12px}
+.rchip em{font-style:normal;color:var(--muted);font-size:11px}
+#lvGrid td,#pfGrid td,#rvGrid td{width:28px;height:26px;text-align:center;font-size:10px;border:1px solid #1a1d24;position:relative}
+#lvGrid .lab,#pfGrid .lab{color:var(--dim);background:transparent}
+.foldcard{border:1px solid var(--line);border-radius:var(--r-lg);padding:8px 12px;margin-top:10px;background:var(--bg2)}
+.foldcard summary{cursor:pointer;color:var(--muted)}
+.err{color:var(--bad);min-height:20px;font-size:13px}
+.hint{color:var(--muted);font-size:13px}
+.hrow{display:flex;gap:10px;align-items:center;border-bottom:1px solid var(--line);padding:8px 0;font-size:13px}
+.streetbar{display:flex;gap:6px;margin:8px 0}
+.streetbar span{padding:4px 8px;border-radius:999px;border:1px solid var(--line);font-size:11px;color:var(--dim)}
+.streetbar span.on{color:var(--fg);border-color:var(--fg)}
+.cellbar{position:absolute;top:0;bottom:0;opacity:.55}
+</style>
+</head>
+<body>
+
+<header class="app">
+  <div class="brand">
+    <div id="fmtBadge">大象Poker</div>
+    <b>大象Poker</b>
+    <span id="headerSub">GTO 跟进解算</span>
+  </div>
+  <div id="userChip" class="userchip"><span id="userName"></span><button class="btn ghost" id="btnLogout" type="button">退出</button></div>
+</header>
+<div id="backBar" class="backbar"><button class="btn ghost" id="btnBack" type="button">返回上一层</button></div>
+<div id="crumb" class="crumb"></div>
+
+<section id="page-auth" class="page on">
+  <div class="card" style="max-width:420px">
+    <h2>进入大象Poker</h2>
+    <p>点下面即可使用，不必注册。</p>
+    <button class="btn wide" id="btnGuest" type="button" style="background:#f3f1ea;color:#0c0d10;font-size:18px;min-height:52px;width:100%;border:0;border-radius:999px;font-weight:700">游客进入</button>
+    <p class="hint" style="margin:14px 0 8px">或登录 / 注册（可选）</p>
+    <label>用户名</label><input id="authUser" autocomplete="username">
+    <label style="margin-top:8px">密码</label><input id="authPass" type="password" autocomplete="current-password">
+    <label style="margin-top:8px">注册确认密码</label><input id="authPass2" type="password">
+    <div class="err" id="authErr"></div>
+    <div class="row" style="margin-top:12px">
+      <button class="btn" id="btnLogin" type="button">登录</button>
+      <button class="btn ghost" id="btnReg" type="button">注册</button>
+    </div>
+  </div>
+</section>
+
+<section id="page-home" class="page">
+  <h2 style="margin-top:0">选择赛制</h2>
+  <div class="grid2">
+    <div class="card">
+      <h2>MTT / 无鱿鱼</h2>
+      <p>常规锦标赛。支持无 Ante、大盲 Ante、双大盲 Ante。</p>
+      <button class="btn" data-fmt="mtt" type="button">进入 MTT</button>
+    </div>
+    <div class="card">
+      <h2>鱿鱼桌</h2>
+      <p>有限 N-1、N+1、N+3、自定义。感知前注写入跟进解算。</p>
+      <button class="btn" data-fmt="squid" type="button">进入鱿鱼</button>
+    </div>
+  </div>
+</section>
+
+<section id="page-work" class="page">
+  <p id="workHint" class="hint"></p>
+  <div class="grid2">
+    <div class="card"><h2>跟进模式</h2><p>边打边输入手牌、对家动作和公共牌，即时给出建议与尺度。</p><button class="btn" data-work="live" type="button">打开跟进</button></div>
+    <div class="card"><h2>复盘模式</h2><p>保存手牌，对比你当时的动作和引擎建议。</p><button class="btn" data-work="review" type="button">打开复盘</button></div>
+    <div class="card"><h2>实验室</h2><p>鱿鱼压力、翻前 CFR、河牌节点。</p><button class="btn ghost" data-work="lab" type="button">打开实验室</button></div>
+  </div>
+</section>
+
+<section id="page-lab" class="page">
+  <div class="grid2">
+    <div class="card" id="labSquidTile"><h2>鱿鱼压力</h2><p>有限 / N+3 EV 与感知前注。</p><button class="btn" data-lab="squid" type="button">打开</button></div>
+    <div class="card"><h2>翻前 GTO</h2><p>RFI 与对抗开池网格。</p><button class="btn" data-lab="preflop" type="button">打开</button></div>
+    <div class="card"><h2>河牌 CFR</h2><p>简化河牌节点。</p><button class="btn" data-lab="river" type="button">打开</button></div>
+  </div>
+</section>
+
+<section id="page-tool" class="page">
+  <div id="view-squid">
+    <div class="row">
+      <div><label>人数</label><select id="nPlayers"></select></div>
+      <div><label>罚金 P (BB / 人)</label><input id="penalty" type="number" value="5" min="1"></div>
+      <div><label>模式</label>
+        <select id="mode">
+          <option value="finite">有限 N-1（最后一人付）</option>
+          <option value="n1">N+1</option>
+          <option value="n3" selected>N+3（高额无限局）</option>
+          <option value="custom">自定义 N+k</option>
+          <option value="orbit">一圈站立</option>
+        </select>
+      </div>
+    </div>
+    <div class="row" id="extraBox" style="display:none"><div><label>额外条数 k</label><input id="squidExtra" type="number" value="3" min="0" max="8"></div></div>
+    <div class="row" id="n3hint"><div><label><input id="firstDouble" type="checkbox" checked> 首池双鱿（计入总供给）</label></div></div>
+    <div id="orbitBox" style="display:none"><label>剩余手数</label><input id="handsLeft" type="number" value="8"></div>
+    <div class="kpis" style="margin:12px 0">
+      <div class="kpi"><span>总鱿</span><b id="kpiS">11</b></div>
+      <div class="kpi"><span>剩余</span><b id="kpiR">11</b></div>
+      <div class="kpi"><span>无鱿</span><b id="kpiU">8</b></div>
+      <div class="kpi"><span>你的 EV</span><b id="kpiEV">—</b></div>
+      <div class="kpi"><span>抢池 ΔEV</span><b id="kpiDelta">—</b></div>
+      <div class="kpi"><span>感知前注</span><b id="kpiAnte">—</b></div>
+    </div>
+    <div id="playerList"></div>
+    <table><thead><tr><th>位置</th><th>鱿</th><th>收场为零</th><th>EV</th><th>ΔEV</th><th>感知前注</th></tr></thead><tbody id="tbody"></tbody></table>
+    <div id="pane-advice" style="margin-top:12px"></div>
+    <pre class="math" id="mathBox"></pre>
+  </div>
+  <div id="view-preflop" style="display:none">
+    <div class="row">
+      <div><label>场景</label><select id="pfSpot"><option value="rfi">RFI</option><option value="hu">单挑</option></select></div>
+      <div><label>位置</label><select id="rfiPos"><option>UTG</option><option>HJ</option><option>CO</option><option>BTN</option><option>SB</option></select></div>
+      <div><label>前注</label><input id="pfAnte" type="number" value="0"></div>
+      <div><label>筹码</label><input id="pfStack" type="number" value="100"></div>
+    </div>
+    <button class="btn" id="runPF" type="button">跑翻前</button>
+    <h3 id="pfTitle">RFI</h3>
+    <div id="pfStats"></div>
+    <table id="pfGrid"></table>
+    <pre id="pfHand" class="math" style="display:none"></pre>
+    <div id="pfLog"></div>
+    <input id="pfOpen" type="hidden" value="2.5"><input id="pf3bet" type="hidden" value="8.5">
+  </div>
+  <div id="view-river" style="display:none">
+    <div class="row">
+      <div><label>底池</label><input id="rvPot" type="number" value="20"></div>
+      <div><label>下注</label><input id="rvBet" type="number" value="12"></div>
+      <div><label>筹码</label><input id="rvStack" type="number" value="80"></div>
+      <div><label>鱿鱼加池</label><input id="rvSquid" type="number" value="0"></div>
+      <div><label>迭代</label><input id="rvIters" type="number" value="80"></div>
+    </div>
+    <div class="row">
+      <div><label>OOP 预设</label><select id="oopPreset"><option value="value">价值</option><option value="bluff">诈唬</option><option value="mixed">混合</option></select></div>
+      <div><label>IP 预设</label><select id="ipPreset"><option value="call">跟注</option><option value="bluff">空气</option><option value="mixed">混合</option></select></div>
+    </div>
+    <div id="boardSlots" class="slots"></div>
+    <div id="cardPicker" class="picker on"></div>
+    <button class="btn" id="runRV" type="button">跑河牌</button>
+    <div id="rvStats"></div>
+    <table id="rvGrid"></table>
+    <pre id="rvHand" class="math"></pre>
+    <div id="rvLog"></div>
+  </div>
+</section>
+
+<section id="page-app" class="page">
+  <div class="desk">
+    <div class="card">
+      <div id="lvStreetBar" class="streetbar"></div>
+      <p id="lvStreet" class="hint"></p>
+      <div id="lvSeats" class="lvseats"></div>
+      <h3 style="margin:14px 0 6px;font-size:14px">你的手牌</h3>
+      <div id="lvHeroSlots" class="slots"></div>
+      <p id="lvHoleHint" class="hint"></p>
+      <h3 style="margin:14px 0 6px;font-size:14px">公共牌 · 翻 / 转 / 河</h3>
+      <div class="slots">
+        <span id="lvFlopSlots" class="slots"></span>
+        <span id="lvTurnSlot"></span>
+        <span id="lvRiverSlot"></span>
+      </div>
+      <div id="lvPicker" class="picker"></div>
+      <div class="act-grid">
+        <button class="btn" id="lvDealNext" type="button">发下一张</button>
+        <button class="btn ghost" id="lvUndo" type="button">撤回公共牌</button>
+        <button class="btn ghost" id="lvNextHand" type="button">下一手</button>
+      </div>
+      <div class="row">
+        <div><label>对家位置</label><select id="lvVillain"></select></div>
+        <div><label>对家动作</label>
+          <select id="lvAct">
+            <option value="open">开池</option><option value="3bet">3-Bet</option><option value="jam">全压</option>
+            <option value="limp">跛入</option><option value="bet">下注</option><option value="raise">加注</option>
+            <option value="check">过牌</option>
+          </select>
+        </div>
+        <div><label>对家鱿鱼</label>
+          <select id="lvVilState">
+            <option value="auto">自动（跟实验室标记）</option>
+            <option value="hunt">无鱿 / 在抢</option>
+            <option value="safe">已有鱿</option>
+          </select>
+        </div>
+      </div>
+      <div class="row">
+        <div><label>对家尺度 (BB)</label><input id="lvSize" type="number" value="2.5" step="0.5"></div>
+        <div><label>跟注额 (BB)</label><input id="lvCall" type="number" value="2.5" step="0.5"></div>
+        <div><label>底池 (BB)</label><input id="lvPot" type="number" value="1.5" step="0.5"></div>
+      </div>
+      <p id="lvNowLine" class="hint"></p>
+    </div>
+    <div class="card">
+      <div class="rec-kicker" style="font-size:12px;color:var(--muted);letter-spacing:.12em">引擎建议</div>
+      <div class="rec-action" id="lvAction">—</div>
+      <div class="rec-mix" id="lvMix"></div>
+      <div class="size-picks" id="lvSizePicks"></div>
+      <div class="kpis" style="margin-top:12px">
+        <div class="kpi"><span>权益</span><b id="lvEq">—</b></div>
+        <div class="kpi"><span>跟注所需</span><b id="lvNeed">—</b></div>
+        <div class="kpi"><span>跟注 EV</span><b id="lvEvCall">—</b></div>
+        <div class="kpi"><span>加注 EV</span><b id="lvEvRaise">—</b></div>
+      </div>
+      <div id="lvWhy" class="advice-item" style="margin-top:12px"><h3>说明</h3><p>左手切手牌和对家动作，右手立刻出建议。</p></div>
+      <div class="review-only" style="margin-top:10px">
+        <label>当时实际动作</label>
+        <select id="lvActual"><option value="fold">弃</option><option value="call">跟/过</option><option value="raise">加/打</option><option value="jam">全压</option></select>
+        <div id="lvCompare" class="advice-item"><h3>对比</h3><p>选完牌和实际动作后，这里显示和引擎是否一致。</p></div>
+        <button class="btn" id="lvSave" type="button">保存这手</button>
+        <div id="handLog"></div>
+      </div>
+    </div>
+  </div>
+  <details class="foldcard" id="tableSetCard">
+    <summary>牌桌设置 · 人数 / 筹码 / 前注</summary>
+    <div class="row">
+      <div><label>人数</label><select id="lvN"></select></div>
+      <div><label>有效筹码</label><input id="lvStack" type="number" value="100"></div>
+      <div class="mtt-only"><label>Ante 模式</label>
+        <select id="lvAnteMode"><option value="none">无</option><option value="bb" selected>大盲 Ante</option><option value="double">双大盲 Ante</option></select>
+      </div>
+      <div class="mtt-only"><label>Ante BB</label><input id="lvMttAnte" type="number" value="1"></div>
+      <div class="mtt-only"><label>泡沫 0-10</label><input id="lvBubble" type="number" value="0"></div>
+      <div class="mtt-only"><label>剩余人数</label><input id="lvLeft" type="number" value="80"></div>
+    </div>
+    <button class="btn ghost" id="lvNextHand2" type="button">下一手</button>
+  </details>
+  <details class="foldcard">
+    <summary>对手范围网格</summary>
+    <div id="lvRangeMeta" class="hint"></div>
+    <div id="lvRangeList" class="rangelist"></div>
+    <table id="lvGrid"></table>
+  </details>
+</section>
+
+<script>
+const RANKS = "23456789TJQKA";
+const RANK_CH = [...RANKS];
+const SUITS = ["s","h","d","c"];
+const SUIT_SYM = {s:"♠",h:"♥",d:"♦",c:"♣"};
+const POS_MAP = {
+  2:["BTN","BB"],3:["BTN","SB","BB"],4:["CO","BTN","SB","BB"],
+  5:["HJ","CO","BTN","SB","BB"],6:["LJ","HJ","CO","BTN","SB","BB"],
+  7:["UTG","LJ","HJ","CO","BTN","SB","BB"],
+  8:["UTG","MP","LJ","HJ","CO","BTN","SB","BB"],
+  9:["UTG","UTG+1","MP","LJ","HJ","CO","BTN","SB","BB"]
+};
+function positions(n){return POS_MAP[n]||Array.from({length:n},(_,i)=>"P"+(i+1))}
+function codes169(){
+  const g=[];
+  for(let i=12;i>=0;i--){
+    const row=[];
+    for(let j=12;j>=0;j--){
+      if(i===j) row.push(RANKS[i]+RANKS[i]);
+      else if(i>j) row.push(RANKS[i]+RANKS[j]+"s");
+      else row.push(RANKS[j]+RANKS[i]+"o");
+    }
+    g.push(row);
+  }
+  return g;
+}
+const GRID = codes169();
+const FLAT = GRID.flat();
+const IDX = Object.fromEntries(FLAT.map((c,i)=>[c,i]));
+
+function parseCode(code){
+  if(code.length===2) return {p:true,hi:RANKS.indexOf(code[0]),lo:RANKS.indexOf(code[0]),s:false};
+  return {p:false,hi:RANKS.indexOf(code[0]),lo:RANKS.indexOf(code[1]),s:code[2]==="s"};
+}
+function evrOf(code){
+  const h=parseCode(code);
+  if(h.p) return 0.503 + h.hi/12*0.350; /* 22≈50.3% AA≈85.3% vs random */
+  let e = 0.325 + h.hi*0.0165 + h.lo*0.0095;
+  if(h.s) e += 0.024;
+  const gap=h.hi-h.lo;
+  if(gap===1) e += 0.018;
+  else if(gap===2) e += 0.008;
+  else if(gap===3) e += 0.003;
+  else e -= Math.min(0.02,(gap-3)*0.004);
+  if(h.hi===12) e += 0.012;
+  return Math.min(0.68, Math.max(0.32,e));
+}
+const EVR = FLAT.map(evrOf);
+const COMBW = FLAT.map(c=>c.length===2?6:c.endsWith("s")?4:12);
+function pairEq(i,j){
+  if(i===j) return 0.5;
+  const a=parseCode(FLAT[i]), b=parseCode(FLAT[j]);
+  if(a.p && b.p){
+    const d=Math.abs(a.hi-b.hi);
+    const eqHi=0.818 + Math.min(0.022,(d-1)*0.0028);
+    return a.hi>b.hi?eqHi:1-eqHi;
+  }
+  if(a.p ^ b.p){
+    const p=a.p?a:b, u=a.p?b:a;
+    const over=(u.hi>p.hi?1:0)+(u.lo>p.hi?1:0);
+    const share=u.hi===p.hi||u.lo===p.hi;
+    let eqP;
+    if(share) eqP=0.655 + Math.max(-0.02,(p.hi-10)*0.01);
+    else if(over===2) eqP=0.518 + p.hi*0.005;
+    else if(over===1) eqP=0.702 + (p.hi>=10?0.028:p.hi*0.002);
+    else eqP=0.822 + p.hi*0.0048;
+    if(u.s) eqP -= 0.012;
+    if(!u.p && u.s && u.hi-u.lo===1) eqP -= 0.006;
+    eqP=Math.max(0.485, Math.min(0.905, eqP));
+    return a.p?eqP:1-eqP;
+  }
+  const shareHi=a.hi===b.hi;
+  const shareAny=shareHi||a.hi===b.lo||a.lo===b.hi||a.lo===b.lo;
+  let eq;
+  if(shareHi){
+    const better=a.lo>b.lo;
+    const base=0.735+(a.s?0.014:0)-(b.s?0.012:0);
+    eq=better?base:1-base;
+  } else if(shareAny){
+    eq = a.hi>b.hi ? 0.625 : a.hi<b.hi ? 0.375 : 0.5;
+    eq += (a.lo-b.lo)*0.012;
+  } else {
+    eq=0.5+(EVR[i]-EVR[j])*1.04;
+    if(a.hi!==b.hi) eq += (a.hi>b.hi?0.035:-0.035);
+  }
+  if(a.s && !b.s) eq += 0.018;
+  if(!a.s && b.s) eq -= 0.018;
+  if(a.hi-a.lo===1) eq += 0.007;
+  if(b.hi-b.lo===1) eq -= 0.007;
+  return Math.max(0.18, Math.min(0.82, eq));
+}
+function evCallCorrect(eq, pot, call){
+  /* 弃牌=0；底池已含对家下注。赢拿走底池，输失去跟注。 */
+  return eq*pot - (1-eq)*call;
+}
+function lateRank(pos){
+  return {UTG:0,"UTG+1":1,MP:2,LJ:3,HJ:4,CO:5,BTN:6,SB:7,BB:8}[pos]??4;
+}
+function softmaxMix(evs, tau){
+  const m=Math.max(...evs);
+  const t=Math.max(0.06, tau);
+  const w=evs.map(e=>Math.exp(Math.max(-18, Math.min(18, (e-m)/t))));
+  const s=w.reduce((a,b)=>a+b,0)||1;
+  return w.map(x=>x/s);
+}
+function packMix(arr){ return {f:arr[0]*100, c:arr[1]*100, r:arr[2]*100}; }
+function recFromMix(mix){
+  const f=mix.f||0,c=mix.c||0,r=mix.r||0;
+  if(r>=c && r>=f && r>=32) return {rec:r>=68?"RAISE":"混加", cls:r>=55?"raise":"mix", mix};
+  if(c>=f && c>=24) return {rec:c>=62?"CALL":"混跟", cls:c>=52?"call":"mix", mix};
+  return {rec:"FOLD", cls:"fold", mix};
+}
+function gtoFe(pot, invest){
+  if(pot+invest<=0) return 0.2;
+  return Math.max(0.08, Math.min(0.55, 0.82*invest/(pot+invest)));
+}
+function defendNeed(heroPos, vilPos){
+  const vs={UTG:0.30,"UTG+1":0.28,MP:0.29,LJ:0.31,HJ:0.33,CO:0.38,BTN:0.45,SB:0.38}[vilPos]||0.32;
+  const adj= heroPos==="BB"?0 : heroPos==="SB"?-0.04 : (heroPos==="BTN"||heroPos==="CO"?0.02:-0.08);
+  return Math.max(0.12, Math.min(0.55, vs+adj));
+}
+function faceOpenDecision(code, heroPos, vilPos, eq, evCall, evRaise){
+  const h=parseCode(code);
+  const ip = lateRank(heroPos)>lateRank(vilPos) || heroPos==="BB";
+  const premium = (h.p && h.hi>=10) || (h.hi===12 && h.lo>=11); /* TT+ AK */
+  const strong = (h.p && h.hi>=8) || code==="AQs" || code==="AJs" || code==="KQs";
+  const polar = !h.p && h.s && ((h.hi===12 && h.lo<=5 && h.lo>=2) || ((h.hi-h.lo)<=2 && h.hi<=9 && h.hi>=5));
+  const smallP = h.p && h.hi<=6; /* 22–88 */
+  const need=defendNeed(heroPos, vilPos)*1326;
+  let acc=0, floor=0;
+  for(const row of OPEN_RANKED){ acc+=row.w; if(acc>=need){ floor=row.p; break; } }
+  const my=OPEN_POWER[code];
+  const mixOf=(f,c,r)=>{const z=f+c+r||1; return {f:f/z*100,c:c/z*100,r:r/z*100};};
+  if(premium){
+    return {rec:"RAISE", cls:"raise", mix:mixOf(2,12,86)};
+  }
+  if(my < floor-6){
+    return {rec:"FOLD", cls:"fold", mix:mixOf(92,6,2)};
+  }
+  const vilLate=lateRank(vilPos)>=5;
+  if(polar && ip && vilLate){
+    return {rec:"RAISE", cls:"raise", mix:mixOf(8,28,64)};
+  }
+  if(strong && vilLate){
+    return {rec:"RAISE", cls:"raise", mix:mixOf(6,22,72)};
+  }
+  if(smallP){
+    if(h.hi<=4 && lateRank(vilPos)<=2) return {rec:"FOLD", cls:"fold", mix:mixOf(88,10,2)};
+    if(!ip && lateRank(vilPos)<=3 && h.hi<=5) return {rec:"FOLD", cls:"fold", mix:mixOf(86,12,2)};
+    return {rec:"CALL", cls:"call", mix:mixOf(10,82,8)};
+  }
+  if(!h.s && lateRank(vilPos)<=2 && (
+    (h.hi===12 && h.lo<=7) || (h.hi===11 && h.lo<=8) || (h.hi===10 && h.lo<=8)
+  )){
+    return {rec:"FOLD", cls:"fold", mix:mixOf(90,8,2)};
+  }
+  if(strong){
+    return {rec:"CALL", cls:"call", mix:mixOf(8,70,22)};
+  }
+  return {rec:"CALL", cls:"call", mix:mixOf(12,78,10)};
+}
+function evRaiseCorrect(eq, pot, invest, fe){
+  const evCalled = eq*(pot+invest) - (1-eq)*invest;
+  return fe*pot + (1-fe)*evCalled;
+}
+
+/* ---------- squid state ---------- */
+const S = {n:8,penalty:5,mode:"n3",handsLeft:8,you:5,hasSquid:Array(8).fill(false),counts:Array(8).fill(0),names:[],last:null,extra:3,firstDouble:true};
+function fmt(x,d=2){if(!isFinite(x))return "—";return (x>=0?"+":"")+Number(x).toFixed(d)+" BB"}
+function pct(x){return isFinite(x)?(x*100).toFixed(1)+"%":"—"}
+
+function solveFinite(n,P,has){
+  const U=has.filter(x=>!x).length; const rows=[];
+  for(let i=0;i<n;i++){
+    const safe=has[i]; let pLast=0,ev=0,evIfWin=0;
+    if(U<=1){
+      if(!safe && U===1){pLast=1;ev=-(n-1)*P;evIfWin=P;}
+      else {pLast=0;ev=U===0?0:P;evIfWin=ev;}
+    } else if(safe){pLast=0;ev=P;evIfWin=P;}
+    else {pLast=1/U;ev=(1-pLast)*P+pLast*(-(n-1)*P);evIfWin=P;}
+    rows.push({i,safe,pLast,ev,dEV:evIfWin-ev,ante:(evIfWin-ev)*n/Math.max(1,n-1)});
+  }
+  return {U,rows};
+}
+function squidSupply(n, mode, extra){
+  if(mode==="finite") return Math.max(1, n-1);
+  if(mode==="n1") return n+1;
+  if(mode==="n3") return n+3;
+  if(mode==="custom") return n+Math.max(0, extra|0);
+  return Math.max(1, n-1);
+}
+function pZeroGiven(n, R){
+  if(R<=0) return 1;
+  return Math.pow((n-1)/n, R);
+}
+function solveNPlus(n, P, counts, extra, mode, firstDouble){
+  const S0 = squidSupply(n, mode, extra);
+  const held = counts.reduce((a,b)=>a+b,0);
+  let R = Math.max(0, S0 - held);
+  if(firstDouble && held===0 && R>=2) R = R; /* first pot still in remaining */
+  const U = counts.filter(c=>c===0).length;
+  const rows=[];
+  const pMiss = pZeroGiven(n, R);
+  const pMissIfWin = pZeroGiven(n, Math.max(0, R-1));
+  const Ezeros = counts.reduce((s,c)=> s + (c>0?0:pMiss), 0);
+  const poolExp = Ezeros * (n-1) * P;
+  const heldNow = Math.max(1, held);
+  for(let i=0;i<n;i++){
+    const c=counts[i]||0;
+    const hunter=c===0;
+    const pLast = hunter ? pMiss : 0;
+    let ev, evIfWin;
+    if(!hunter){
+      const share = c / (heldNow + Ezeros*0.15);
+      ev = poolExp * share;
+      evIfWin = poolExp * ((c+1) / (heldNow+1 + Math.max(0,Ezeros-0.2)));
+    } else {
+      ev = -pLast*(n-1)*P + (1-pLast)*(poolExp / Math.max(1, n-Ezeros));
+      const pLastW = pMissIfWin*0; /* winning one squid clears zero */
+      evIfWin = (1-pLastW)*(poolExp / Math.max(1, n-Math.max(0.2,Ezeros-1))) * (1/(heldNow+1));
+      evIfWin += 0.15*P*(R>0?1:0);
+    }
+    const dEV = evIfWin - ev;
+    rows.push({i, safe:!hunter, count:c, pLast, ev, dEV, ante: dEV * n / Math.max(1,n-1)});
+  }
+  return {U, R, S0, Ezeros, rows};
+}
+function solveOrbit(n,P,has,k){
+  const pWin=1/n, pRemain=Math.pow(1-pWin,k), U=has.filter(x=>!x).length, rows=[];
+  for(let i=0;i<n;i++){
+    const safe=has[i];
+    if(safe){
+      const ev=U*pRemain*P;
+      rows.push({i,safe,pLast:0,ev,dEV:0,ante:0});
+    } else {
+      const eO=(U-1)*pRemain;
+      const ev=pRemain*(-P*(n-1-eO))+(1-pRemain)*(P*eO);
+      const evW=P*eO;
+      rows.push({i,safe,pLast:pRemain,ev,dEV:evW-ev,ante:(evW-ev)*n/Math.max(1,n-1)});
+    }
+  }
+  return {U,rows};
+}
+function initPlayersSel(){
+  const sel=document.getElementById("nPlayers");
+  for(let i=2;i<=9;i++){const o=document.createElement("option");o.value=i;o.textContent=i+" 人";if(i===8)o.selected=true;sel.appendChild(o);}
+}
+function resetPlayers(){
+  const pos=positions(S.n);
+  S.hasSquid=Array(S.n).fill(false);
+  S.counts=Array(S.n).fill(0);
+  S.names=pos.slice();
+  S.you=S.n>=6?S.n-3:Math.max(0,S.n-2);
+  renderPlayers(); squidSolve();
+}
+function renderPlayers(){
+  const box=document.getElementById("playerList"); if(!box) return; box.innerHTML="";
+  const pos=positions(S.n);
+  const multi = S.mode!=="finite" && S.mode!=="orbit";
+  for(let i=0;i<S.n;i++){
+    const c=S.counts[i]||0;
+    const safe=c>0;
+    S.hasSquid[i]=safe;
+    const el=document.createElement("div");
+    el.className="seat"+(i===S.you?" you":"")+(safe?" safe":"");
+    el.innerHTML=`<div class="pos">${pos[i]}</div><input type="text" value="${S.names[i]||pos[i]}" data-i="${i}" class="nm">
+      ${multi?`<div class="cnt"><button data-sub="${i}">-</button><b>${c}</b><button data-add="${i}">+</button></div>`:
+      `<button class="pill ${safe?"on":"off"}" data-toggle="${i}">${safe?"有鱿":"无鱿"}</button>`}
+      <button class="youbtn ${i===S.you?"active":""}" data-you="${i}">我</button>`;
+    box.appendChild(el);
+  }
+  box.querySelectorAll("[data-toggle]").forEach(b=>b.onclick=()=>{
+    const i=+b.dataset.toggle; S.counts[i]=S.counts[i]?0:1; S.hasSquid[i]=S.counts[i]>0; renderPlayers(); squidSolve();
+  });
+  box.querySelectorAll("[data-add]").forEach(b=>b.onclick=()=>{const i=+b.dataset.add; S.counts[i]=Math.min(9,(S.counts[i]||0)+1); renderPlayers(); squidSolve();});
+  box.querySelectorAll("[data-sub]").forEach(b=>b.onclick=()=>{const i=+b.dataset.sub; S.counts[i]=Math.max(0,(S.counts[i]||0)-1); renderPlayers(); squidSolve();});
+  box.querySelectorAll("[data-you]").forEach(b=>b.onclick=()=>{S.you=+b.dataset.you; L.hero=S.you; renderPlayers(); squidSolve();});
+  box.querySelectorAll(".nm").forEach(inp=>inp.onchange=()=>{S.names[+inp.dataset.i]=inp.value;});
+}
+function squidSolve(){
+  const nEl=document.getElementById("nPlayers"); if(!nEl) return;
+  S.n=+nEl.value;
+  S.penalty=+document.getElementById("penalty").value||0;
+  S.mode=document.getElementById("mode").value;
+  S.handsLeft=+document.getElementById("handsLeft")?.value||1;
+  S.extra=+(document.getElementById("squidExtra")?.value||3);
+  S.firstDouble=!!document.getElementById("firstDouble")?.checked;
+  const orbit=document.getElementById("orbitBox"); if(orbit) orbit.style.display=S.mode==="orbit"?"block":"none";
+  const extraBox=document.getElementById("extraBox"); if(extraBox) extraBox.style.display=(S.mode==="custom")?"block":"none";
+  const n3hint=document.getElementById("n3hint"); if(n3hint) n3hint.style.display=(S.mode==="n3"||S.mode==="n1"||S.mode==="custom")?"block":"none";
+  if((S.counts||[]).length!==S.n){resetPlayers();return;}
+  S.hasSquid=S.counts.map(c=>c>0);
+  let res;
+  if(S.mode==="orbit") res=solveOrbit(S.n,S.penalty,S.hasSquid,S.handsLeft);
+  else if(S.mode==="finite") res=solveFinite(S.n,S.penalty,S.hasSquid);
+  else res=solveNPlus(S.n,S.penalty,S.counts,S.extra,S.mode,S.firstDouble);
+  S.last=res;
+  const kpiU=document.getElementById("kpiU"); if(kpiU) kpiU.textContent=res.U;
+  const kpiR=document.getElementById("kpiR"); if(kpiR) kpiR.textContent=res.R!=null?res.R:"—";
+  const kpiS=document.getElementById("kpiS"); if(kpiS) kpiS.textContent=res.S0!=null?res.S0:squidSupply(S.n,S.mode,S.extra);
+  const me=res.rows[S.you];
+  document.getElementById("kpiEV").textContent=fmt(me.ev);
+  document.getElementById("kpiDelta").textContent=fmt(me.dEV);
+  document.getElementById("kpiAnte").textContent=fmt(me.ante);
+  const pfA=document.getElementById("pfAnte"); if(pfA) pfA.value=me.ante.toFixed(2);
+  const rvS=document.getElementById("rvSquid"); if(rvS) rvS.value=Math.max(0,me.dEV).toFixed(2);
+  if(typeof liveRecommend==="function") try{liveRecommend();}catch(e){}
+  const pos=positions(S.n);
+  document.getElementById("tbody").innerHTML=res.rows.map(r=>`<tr class="${r.i===S.you?"me":""}"><td>${pos[r.i]}${r.i===S.you?" · 你":""}</td><td>${(r.count!=null?r.count+" 条": (r.safe?"已安全":"无鱿"))}</td><td>${pct(r.pLast)}</td><td>${fmt(r.ev)}</td><td>${fmt(r.dEV)}</td><td><b>${fmt(r.ante)}</b></td></tr>`).join("");
+  renderAdvice(res,me);
+  const n=S.n,P=S.penalty,U=res.U;
+  const box=document.getElementById("mathBox");
+  if(box){
+    if(S.mode==="finite"){
+      box.textContent=`有限 N-1  n=${n}  鱿=${n-1}  P=${P}  无鱿 U=${U}
+p_last = 1/U
+EV_safe = +P
+EV_unsafe = P*(1-n/U)
+感知前注 = ΔEV * n/(n-1)`;
+    } else if(S.mode==="orbit"){
+      box.textContent=`一圈站立  剩余手=${S.handsLeft}  p_zero=(1-1/n)^k`;
+    } else {
+      box.textContent=`${S.mode==="n3"?"N+3":S.mode==="n1"?"N+1":"N+k"}  人数 ${n}  总鱿 ${res.S0}  剩余 ${res.R}
+无鱿 ${U}  期望收场无鱿 ≈ ${(res.Ezeros||0).toFixed(2)}
+p(仍为零) ≈ ((n-1)/n)^R
+收场每个无鱿支付 (n-1)*P，有鱿按条数分池
+你: EV=${me.ev.toFixed(2)}  抢本池 ΔEV=${me.dEV.toFixed(2)}  感知前注=${me.ante.toFixed(2)}`;
+    }
+  }
+}
+function renderAdvice(res,me){
+  const n=S.n,P=S.penalty,U=res.U;
+  const phase=U===n?"开局":U>=Math.ceil(n*0.6)?"前期":U>=3?"中期":U===2?"决战":"收场";
+  const items=[{t:`${phase} · 无鱿 ${U}/${n}`+(res.S0?` · 总鱿 ${res.S0} · 还剩 ${res.R}`:""),
+    p:`边池 EV ${fmt(me.ev)}。赢下主池 ΔEV ${fmt(me.dEV)}，感知前注 ${fmt(me.ante)}。已写入跟进解算。`}];
+  if(S.mode==="n3") items.push({t:"N+3：不是只罚最后一人",p:"8 人桌 11 条鱿。任何人可叠多条。鱿发完后，每一个仍为 0 的人都要付 (n-1)*P。开局约 1～2 人会交罚。抢第一条的 ΔEV 比有限模式低，越到剩余少条、无鱿还多，ΔEV 越陡。"});
+  if(!me.safe&&U>=2) items.push({t:"你无鱿：范围必须宽",p:"感知前注抬高开池和跟注。N+3 前期不要当成有限决战去全桌 jam；剩余鱿还多时 p(收场为零) 下降慢。"});
+  if(me.safe&&U>=2) items.push({t:"你已有鱿：打价值、少轻 3-bet",p:"猎人会用宽范围把弱牌打到河。加大价值尺度，减少空气加注。N+3 下多一条仍能多吃罚金份额。"});
+  if(U===2&&!me.safe) items.push({t:"双人猎杀",p:`几乎变成有限决战。输家量级 ${(n-1)*P} BB。河牌把 ΔEV 留在加池。`});
+  const pane=document.getElementById("pane-advice");
+  if(pane) pane.innerHTML=items.map(x=>`<div class="advice-item"><h3>${x.t}</h3><p>${x.p}</p></div>`).join("");
+}
+
+/* ---------- RFI base charts (approx 100bb 8max GTO raise%) ---------- */
+function openPower(code){
+  const h=parseCode(code);
+  if(h.p) return 240 + h.hi*38; /* 22 靠后，77+ 进 UTG */
+  let x = h.hi*18 + h.lo*3;
+  if(h.s) x += 16;
+  const gap=h.hi-h.lo;
+  if(h.s && gap<=2 && h.lo>=2) x += 70; /* 54s–T9s 按钮开池 */
+  if(gap===1) x += 14;
+  else if(gap===2) x += 7;
+  else if(gap>=5) x -= gap*1.2;
+  if(h.hi===12) x += 10;
+  if(h.hi>=10 && h.lo>=9) x += 8;
+  return x;
+}
+const OPEN_POWER = Object.fromEntries(FLAT.map(c=>[c,openPower(c)]));
+const OPEN_RANKED = FLAT.map(c=>({c,w:c.length===2?6:c.endsWith("s")?4:12,p:OPEN_POWER[c]})).sort((a,b)=>b.p-a.p);
+function rfiFloor(pos,ante,stack){
+  const target={UTG:0.21,"UTG+1":0.20,MP:0.205,LJ:0.23,HJ:0.255,CO:0.30,BTN:0.47,SB:0.42}[pos]||0.22;
+  const extra=Math.min(0.14,(ante||0)*0.035)+(stack<=25?0.04:stack<=40?0.02:0);
+  const need=Math.min(0.62, target+extra)*1326;
+  let acc=0;
+  for(const row of OPEN_RANKED){
+    acc+=row.w;
+    if(acc>=need) return row.p;
+  }
+  return 0;
+}
+function rfiFreq(code,pos,ante,stack){
+  const floor=rfiFloor(pos,ante,stack);
+  const my=OPEN_POWER[code];
+  const gap=my-floor;
+  let raise=100/(1+Math.exp(-gap/1.6));
+  if(gap>3) raise=100;
+  if(gap<-5) raise=0;
+  raise=Math.max(0, Math.min(100, raise));
+  if(code==="AA"||code==="KK"||code==="QQ"||code==="AKs"||code==="AKo") raise=100;
+  if(code==="JJ"||code==="TT"||code==="AQs") raise=Math.max(raise, 88);
+  if(pos==="UTG"||pos==="UTG+1"){
+    if(code.length===2 && "2345".includes(code[0])) raise=0;
+    if(code==="66") raise=Math.max(raise, pos==="UTG"?42:70);
+    if(code==="77") raise=Math.max(raise, 70);
+  }
+  if(pos==="UTG"){
+    if(code==="A9o") raise=Math.min(raise, 8);
+    if(code==="ATo") raise=Math.min(raise, 40);
+    if(code==="A6s"||code==="A7s") raise=Math.min(raise, 22);
+    if(code==="A5s"||code==="98s") raise=Math.max(raise, 62);
+    if(code==="KQo") raise=Math.min(raise, 45);
+    if(code==="66") raise=Math.min(raise, 55);
+  }
+  if(pos==="UTG" && /[2-9][2-8]o/.test(code) && code!=="98o" && code!=="97o") raise=0;
+  if(pos==="UTG" && (code==="J9s"||code==="J8s"||code==="T8s")) raise=Math.min(raise,12);
+  const evr=evrOf(code);
+  if(pos==="SB" && raise>8 && raise<92){
+    const limp=Math.min(30, 7+(ante||0)*1.35);
+    const r=raise*0.82;
+    let allin= stack<=20 && evr>0.55 ? 10:0;
+    const fold=Math.max(0,100-r-limp-allin);
+    return {fold, limp, raise:r, allin};
+  }
+  let allin=0;
+  if(stack<=18 && evr>0.50){
+    allin=Math.min(100, raise || (evr>0.58?82:0));
+    raise=Math.max(0, raise-allin);
+  } else if(stack<=28 && evr>0.58 && raise>40){
+    allin=Math.min(35, raise*0.25);
+    raise=Math.max(0, raise-allin);
+  }
+  return {fold:Math.max(0,100-raise-allin), limp:0, raise, allin};
+}
+
+/* ---------- CFR+ core (linear average strategy, combo-weighted ranges) ---------- */
+let pfStop=false, pfResult=null;
+function emptyCFR(nAct){
+  return Array.from({length:169},()=>({r:Array(nAct).fill(0),s:Array(nAct).fill(1/nAct),a:Array(nAct).fill(0)}));
+}
+function stratFrom(r){
+  const p=r.map(x=>Math.max(0,x)); const t=p.reduce((a,b)=>a+b,0);
+  if(t<=0) return r.map(()=>1/r.length);
+  return p.map(x=>x/t);
+}
+function accAvg(node, w){ for(let a=0;a<node.s.length;a++) node.a[a]+=w*node.s[a]; }
+function takeAvg(node){
+  const t=node.a.reduce((x,y)=>x+y,0);
+  if(t<=0) return node.s.slice();
+  return node.a.map(x=>x/t);
+}
+function eqVsRange(i, weights){
+  let num=0,den=0;
+  for(let j=0;j<169;j++) if(weights[j]>0){num+=weights[j]*pairEq(i,j);den+=weights[j];}
+  return den?num/den:0.5;
+}
+function wAct(nodes, ai){
+  const w=Array(169);
+  for(let i=0;i<169;i++) w[i]=COMBW[i]*nodes[i].s[ai];
+  return w;
+}
+function cfrPlus(node, evs){
+  const v=sdot(node.s, evs);
+  for(let a=0;a<evs.length;a++) node.r[a]=Math.max(0, node.r[a]+evs[a]-v);
+  return v;
+}
+function runPreflopCFR(){
+  pfStop=false;
+  const spot=document.getElementById("pfSpot").value;
+  const stack=+document.getElementById("pfStack").value;
+  const ante=+document.getElementById("pfAnte").value||0;
+  const openS=+document.getElementById("pfOpen").value;
+  const tbetS=+document.getElementById("pf3bet").value;
+  if(spot==="rfi"){
+    const pos=document.getElementById("rfiPos").value;
+    const strats=FLAT.map(c=>rfiFreq(c,pos,ante,stack));
+    pfResult={mode:"rfi",pos,strats,hero:"IP"};
+    drawPF();
+    document.getElementById("pfLog").textContent=`RFI 完成：${pos} · 筹码 ${stack}BB · 感知前注 ${ante.toFixed(2)}BB`;
+    return;
+  }
+  /* HU tree
+     P0: Fold / Raise-to-openS
+     P1 vs raise: Fold / Call / 3bet-to-tbetS
+     P0 vs 3bet: Fold / Call / Jam
+     P1 vs jam: Fold / Call
+     Chip EV from start of hand (blinds + ante already posted).
+  */
+  const sb = spot==="hu"?0.5:1;
+  const bb = 1;
+  const A = ante;
+  const S = Math.max(openS+1, stack);
+  const R = openS;
+  const T = Math.max(tbetS, openS+2);
+  const R0=emptyCFR(2), R1=emptyCFR(3), R0v=emptyCFR(3), R1j=emptyCFR(2);
+  const iters=400;
+  document.getElementById("pfLog").textContent="CFR+ 迭代中（组合加权 · 线性平均策略）…";
+
+  const evF0 = -(sb+A);
+  const evWinFold1 = (bb+A);
+  const evF1 = -(bb+A);
+  const evP0fold3 = -(R+A);
+  const evP1win3 = (R+A);
+  const evP1foldJam = -(T+A);
+  const evP0jamFold = (T+A);
+  function sd(eq, put){ return (2*eq-1)*put; }
+
+  let it=0, lastExpl=0;
+  function step(){
+    if(pfStop||it>=iters){
+      const strats=Array(169);
+      for(let i=0;i<169;i++){
+        const s0=takeAvg(R0[i]), sv=takeAvg(R0v[i]), s1=takeAvg(R1[i]), sj=takeAvg(R1j[i]);
+        strats[i]={
+          fold:s0[0]*100, raise:s0[1]*100, limp:0, allin:0,
+          bbFold:s1[0]*100, bbCall:s1[1]*100, bb3:s1[2]*100,
+          vs3Fold:sv[0]*100, vs3Call:sv[1]*100, vs3Jam:sv[2]*100,
+          vsJamFold:sj[0]*100, vsJamCall:sj[1]*100
+        };
+      }
+      pfResult={mode:"hu",spot,strats,hero:"P0"};
+      drawPF();
+      document.getElementById("pfLog").textContent=
+        `CFR+ 完成 ${it} 次 · 线性平均策略 · 单挑${spot==="hu"?" SB vs BB":" BTN vs BB"} · ante ${A.toFixed(2)} · 可剥削 ≈ ${lastExpl.toFixed(2)} BB/手`;
+      return;
+    }
+    for(let i=0;i<169;i++){
+      R0[i].s=stratFrom(R0[i].r);
+      R1[i].s=stratFrom(R1[i].r);
+      R0v[i].s=stratFrom(R0v[i].r);
+      R1j[i].s=stratFrom(R1j[i].r);
+    }
+    const wRaise=wAct(R0,1), wCall=wAct(R1,1), w3=wAct(R1,2), wJam=wAct(R0v,2);
+    const mR=wRaise.reduce((a,b)=>a+b,0)||1;
+    const mC=wCall.reduce((a,b)=>a+b,0)||1;
+    const m3=w3.reduce((a,b)=>a+b,0)||1;
+    const p1F=wAct(R1,0).reduce((a,b)=>a+b,0)/Math.max(1, COMBW.reduce((a,b)=>a+b,0));
+    /* action masses conditional on P1 responding, combo-weighted */
+    const mass1=wAct(R1,0).reduce((a,b)=>a+b,0)+mC+m3 || 1;
+    const p1fold=wAct(R1,0).reduce((a,b)=>a+b,0)/mass1;
+    const p1call=mC/mass1, p1three=m3/mass1;
+    const massJ=wAct(R1j,0).reduce((a,b)=>a+b,0)+wAct(R1j,1).reduce((a,b)=>a+b,0)||1;
+    const p1jF=wAct(R1j,0).reduce((a,b)=>a+b,0)/massJ;
+    const p1jC=1-p1jF;
+    let p0f=0,p0c=0,p0j=0;
+    for(let k=0;k<169;k++){
+      p0f+=COMBW[k]*R0v[k].s[0]; p0c+=COMBW[k]*R0v[k].s[1]; p0j+=COMBW[k]*R0v[k].s[2];
+    }
+    const z3=p0f+p0c+p0j||1; p0f/=z3; p0c/=z3; p0j/=z3;
+
+    let br0=0, br1=0, ev0=0, ev1=0, den0=0, den1=0;
+    for(let i=0;i<169;i++){
+      const eqCall=eqVsRange(i,wCall);
+      const eq3=eqVsRange(i,w3);
+      const eqJam=eqVsRange(i,wJam);
+      const evVs3F=evP0fold3;
+      const evVs3C=sd(eq3, T+A);
+      const evVs3J=p1jF*evP0jamFold + p1jC*sd(eq3, S+A);
+      const evs3=[evVs3F,evVs3C,evVs3J];
+      cfrPlus(R0v[i], evs3);
+      const evVs3=sdot(R0v[i].s, evs3);
+      const evR = p1fold*evWinFold1 + p1call*sd(eqCall, R+A) + p1three*evVs3;
+      const evs0=[evF0, evR];
+      cfrPlus(R0[i], evs0);
+      accAvg(R0[i], it+1);
+      accAvg(R0v[i], it+1);
+      br0 += COMBW[i]*Math.max(...evs0);
+      ev0 += COMBW[i]*sdot(R0[i].s, evs0);
+      den0 += COMBW[i];
+
+      const eqVsOp=eqVsRange(i,wRaise);
+      const ev1F=evF1;
+      const ev1C=sd(eqVsOp, R+A);
+      const ev3F=evP1win3;
+      const ev3C=sd(eqVsOp, T+A);
+      const ev3J=sd(eqJam, S+A);
+      cfrPlus(R1j[i], [evP1foldJam, ev3J]);
+      accAvg(R1j[i], it+1);
+      const ev13 = p0f*ev3F + p0c*ev3C + p0j*sdot(R1j[i].s, [evP1foldJam, ev3J]);
+      const evs1=[ev1F, ev1C, ev13];
+      cfrPlus(R1[i], evs1);
+      accAvg(R1[i], it+1);
+      br1 += COMBW[i]*Math.max(...evs1);
+      ev1 += COMBW[i]*sdot(R1[i].s, evs1);
+      den1 += COMBW[i];
+    }
+    it++;
+    lastExpl = 0.5*((br0-ev0)/Math.max(1,den0) + (br1-ev1)/Math.max(1,den1));
+    if(it%25===0) document.getElementById("pfLog").textContent=`CFR+ ${it}/${iters} · 可剥削 ${lastExpl.toFixed(2)} BB/手`;
+    requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+function sdot(s,e){let v=0;for(let i=0;i<s.length;i++)v+=s[i]*e[i];return v;}
+
+function colorMix(st){
+  const f=st.fold||0, l=st.limp||0, r=st.raise||0, a=st.allin||0;
+  const t=f+l+r+a||1;
+  return {f:f/t,l:l/t,r:r/t,a:a/t};
+}
+function drawPF(){
+  const view=document.getElementById("pfSpot").value;
+  const who=document.getElementById("pfTitle");
+  let mode="p0";
+  if(view==="rfi"){who.textContent="RFI "+document.getElementById("rfiPos").value;mode="rfi";}
+  else who.textContent=(view==="hu"?"SB":"BTN")+" 开池策略";
+  const tb=document.getElementById("pfGrid");
+  let html="<tr><td class='lab'></td>"+RANK_CH.slice().reverse().map(r=>`<td class='lab'>${r}</td>`).join("")+"</tr>";
+  let raiseW=0,foldW=0,limpW=0,n=0;
+  for(let i=0;i<13;i++){
+    html+=`<tr><td class='lab'>${RANK_CH[12-i]}</td>`;
+    for(let j=0;j<13;j++){
+      const code=GRID[i][j];
+      const st=pfResult?pfResult.strats[IDX[code]]:{fold:100,raise:0,limp:0,allin:0};
+      const m=colorMix(st);
+      raiseW+=st.raise||0; foldW+=st.fold||0; limpW+=st.limp||0; n++;
+      const bars=`<div class="cellbar" style="width:${m.r*100}%;background:#22c55e;left:0"></div>
+        <div class="cellbar" style="width:${m.l*100}%;background:#3b82f6;left:${m.r*100}%"></div>
+        <div class="cellbar" style="width:${m.a*100}%;background:#e8c547;left:${(m.r+m.l)*100}%"></div>`;
+      html+=`<td data-code="${code}" title="${code}">${bars}<span style="position:relative;z-index:1">${code}</span></td>`;
+    }
+    html+="</tr>";
+  }
+  tb.innerHTML=html;
+  document.getElementById("pfStats").innerHTML=`<span>加注 ${(raiseW/n).toFixed(1)}%</span><span>弃牌 ${(foldW/n).toFixed(1)}%</span><span>跛入 ${(limpW/n).toFixed(1)}%</span>`;
+  tb.querySelectorAll("td[data-code]").forEach(td=>td.onclick=()=>{
+    if(!pfResult) return;
+    const st=pfResult.strats[IDX[td.dataset.code]];
+    const el=document.getElementById("pfHand"); el.style.display="block";
+    el.textContent = `${td.dataset.code}
+Fold ${ (st.fold||0).toFixed(1)}%   Limp ${(st.limp||0).toFixed(1)}%   Raise ${(st.raise||0).toFixed(1)}%   All-in ${(st.allin||0).toFixed(1)}%
+`+(st.bbFold!=null?`BB vs open: Fold ${st.bbFold.toFixed(1)}%  Call ${st.bbCall.toFixed(1)}%  3bet ${st.bb3.toFixed(1)}%
+vs 3bet: Fold ${st.vs3Fold.toFixed(1)}%  Call ${st.vs3Call.toFixed(1)}%  Jam ${st.vs3Jam.toFixed(1)}%
+BB vs jam: Fold ${(st.vsJamFold||0).toFixed(1)}%  Call ${(st.vsJamCall||0).toFixed(1)}%`:"");
+  });
+}
+
+/* ---------- cards / river evaluator ---------- */
+function cardId(r,s){return r+s*13;}
+function eval5(cs){
+  /* Category bases 1e7 apart so kicker 13-adic codes cannot jump a class.
+     0 high-card, 1 pair, 2 two-pair, 3 trips, 4 straight, 5 flush, 6 full house, 7 quads, 8 straight-flush. */
+  const CAT=10000000;
+  const rs=cs.map(c=>c%13), ss=cs.map(c=>c/13|0);
+  const cnt=Array(13).fill(0); rs.forEach(r=>cnt[r]++);
+  const flush=ss.every(s=>s===ss[0]);
+  const uniq=[...new Set(rs)].sort((a,b)=>b-a);
+  let straight=false,top=0;
+  if(uniq.length===5){
+    if(uniq[0]-uniq[4]===4){straight=true;top=uniq[0];}
+    else if(uniq[0]===12&&uniq[1]===3&&uniq[2]===2&&uniq[3]===1&&uniq[4]===0){straight=true;top=3;}
+  }
+  function pack(ranks){ let v=0; ranks.forEach(r=>v=v*13+r); return v; }
+  if(flush&&straight) return 8*CAT+top;
+  if(cnt.includes(4)){const f=cnt.indexOf(4);const k=rs.find(r=>r!==f);return 7*CAT+f*13+k;}
+  if(cnt.includes(3)&&cnt.includes(2)){const t=cnt.indexOf(3),p=cnt.indexOf(2);return 6*CAT+t*13+p;}
+  if(flush) return 5*CAT+pack([...rs].sort((a,b)=>b-a));
+  if(straight) return 4*CAT+top;
+  if(cnt.includes(3)){const t=cnt.indexOf(3);const ks=rs.filter(r=>r!==t).sort((a,b)=>b-a);return 3*CAT+t*169+ks[0]*13+ks[1];}
+  const pairs=[]; for(let i=12;i>=0;i--) if(cnt[i]===2) pairs.push(i);
+  if(pairs.length===2){const k=rs.find(r=>r!==pairs[0]&&r!==pairs[1]);return 2*CAT+pairs[0]*169+pairs[1]*13+k;}
+  if(pairs.length===1){const ks=rs.filter(r=>r!==pairs[0]).sort((a,b)=>b-a);return 1*CAT+pairs[0]*2197+ks[0]*169+ks[1]*13+ks[2];}
+  return pack([...rs].sort((a,b)=>b-a));
+}
+function eval7(cs){
+  let best=-1;
+  for(let a=0;a<7;a++) for(let b=a+1;b<7;b++){
+    const h=[]; for(let i=0;i<7;i++) if(i!==a&&i!==b) h.push(cs[i]);
+    const s=eval5(h); if(s>best) best=s;
+  }
+  return best;
+}
+function evalNow(cs){
+  if(cs.length<=5) return eval5(cs);
+  if(cs.length===6){
+    let best=-1;
+    for(let i=0;i<6;i++){
+      const h=cs.filter((_,k)=>k!==i);
+      const s=eval5(h); if(s>best) best=s;
+    }
+    return best;
+  }
+  return eval7(cs);
+}
+function postflopShape(hole, board){
+  const cards=[...hole,...board.filter(c=>c!=null)];
+  if(cards.length<5) return {cat:"pre", made:0, fd:false, oesd:false, gut:false, tp:false};
+  const made=evalNow(cards);
+  const rs=cards.map(c=>c%13), ss=cards.map(c=>c/13|0);
+  const suitCnt=[0,0,0,0]; ss.forEach(s=>suitCnt[s]++);
+  const fd=suitCnt.some(n=>n>=4) && !suitCnt.some(n=>n>=5);
+  const cnt=Array(13).fill(0); rs.forEach(r=>cnt[r]++);
+  const uniq=[...new Set(rs)].sort((a,b)=>a-b);
+  let oesd=false, gut=false;
+  const ranks=new Set(rs);
+  if(ranks.has(12)) ranks.add(-1);
+  const arr=[...ranks].sort((a,b)=>a-b);
+  for(let i=0;i<arr.length;i++){
+    let run=1;
+    for(let j=i+1;j<arr.length && arr[j]===arr[i]+run;j++) run++;
+    if(run>=4 && !suitCnt.some(n=>n>=5)) oesd=true;
+    if(run===3) gut=true;
+  }
+  const boardHi=Math.max(...board.filter(c=>c!=null).map(c=>c%13));
+  const holeHi=Math.max(hole[0]%13, hole[1]%13);
+  const pairs=cnt.filter(x=>x===2).length;
+  const trips=cnt.some(x=>x>=3);
+  const boat=cnt.some(x=>x===3)&&cnt.some(x=>x===2);
+  const quads=cnt.some(x=>x===4);
+  const flushNow=suitCnt.some(n=>n>=5);
+  const tp = pairs===1 && !trips && hole.some(c=>c%13===boardHi);
+  const overpair = pairs===1 && !trips && hole[0]%13===hole[1]%13 && hole[0]%13>boardHi;
+  let cat="air";
+  if(quads||boat) cat="nuts";
+  else if(flushNow) cat="made";
+  else if(trips) cat="trips";
+  else if(pairs>=2) cat="two";
+  else if(overpair) cat="over";
+  else if(tp) cat="tp";
+  else if(pairs===1) cat="pair";
+  else if(fd&&oesd) cat="combo";
+  else if(fd) cat="fd";
+  else if(oesd) cat="oesd";
+  else if(gut) cat="gut";
+  return {cat, made, fd, oesd, gut, tp, overpair};
+}
+function postflopDecision(shape, act, eq, evCall, evRaise, street, ctx){
+  const c=shape.cat;
+  const strong=["nuts","made","trips","two","over"].includes(c);
+  const draw=["fd","oesd","combo"].includes(c);
+  const river=street==="河牌";
+  const missed=river && (draw || c==="gut");
+  const vFrac=(ctx&&ctx.vFrac)||0.5;
+  const tag=(ctx&&ctx.sizeLab)||"";
+  const withSz=(verb)=> tag ? `${verb} ${tag}` : verb;
+  function mixOf(f,c0,r){ const z=f+c0+r||1; return {f:f/z*100,c:c0/z*100,r:r/z*100}; }
+  if(act==="check"){
+    if(strong) return {rec:withSz("BET"),cls:"raise",mix:mixOf(0,15,85)};
+    if(c==="tp") return {rec:withSz("BET"),cls:"raise",mix:mixOf(0,28,72)};
+    if(draw && !river) return {rec:"CHECK / "+withSz("BET"),cls:"mix",mix:mixOf(0,58,42)};
+    if(c==="pair") return {rec:"CHECK / "+withSz("BET"),cls:"mix",mix:mixOf(0,70,30)};
+    return {rec:"CHECK",cls:"call",mix:mixOf(0,90,10)};
+  }
+  if(act==="jam" || vFrac>=1.4){
+    if(strong) return {rec: evCall>0?"CALL":"FOLD", cls: evCall>0?"call":"fold", mix: mixOf(evCall>0?8:85, evCall>0?90:12, 2)};
+    if(c==="tp" && evCall>0) return {rec:"CALL",cls:"call",mix:mixOf(12,86,2)};
+    if(evCall>0.25) return {rec:"CALL",cls:"call",mix:mixOf(20,78,2)};
+    return {rec:"FOLD",cls:"fold",mix:mixOf(92,7,1)};
+  }
+  const small=vFrac<=0.4;
+  const large=vFrac>=0.75;
+  if(missed || c==="air" || c==="gut"){
+    if(!large && evCall>0.2) return {rec:"CALL",cls:"call",mix:mixOf(18,78,4)};
+    return {rec:"FOLD",cls:"fold",mix:mixOf(90,8,2)};
+  }
+  if(draw && !river){
+    if(large && evCall<-0.05) return {rec:"FOLD",cls:"fold",mix:mixOf(78,18,4)};
+    if(c==="combo" && small) return {rec:withSz("RAISE"),cls:"raise",mix:mixOf(8,42,50)};
+    if(evCall>=-0.35) return {rec:"CALL",cls:"call",mix:mixOf(10,82,8)};
+    return {rec:"FOLD",cls:"fold",mix:mixOf(78,18,4)};
+  }
+  if(strong){
+    if(large && evRaise<evCall) return {rec:"CALL",cls:"call",mix:mixOf(5,80,15)};
+    return {rec:withSz("RAISE"),cls:"raise",mix:mixOf(3,18,79)};
+  }
+  if(c==="tp"){
+    if(small && evRaise>evCall+0.4) return {rec:withSz("RAISE"),cls:"raise",mix:mixOf(10,40,50)};
+    if(evCall>=-0.2) return {rec:"CALL",cls:"call",mix:mixOf(12,78,10)};
+    return {rec:"FOLD",cls:"fold",mix:mixOf(82,15,3)};
+  }
+  if(c==="pair"){
+    if(large) return {rec:"FOLD",cls:"fold",mix:mixOf(88,10,2)};
+    if(evCall>1.0) return {rec:"CALL",cls:"call",mix:mixOf(22,70,8)};
+    return {rec:"FOLD",cls:"fold",mix:mixOf(86,12,2)};
+  }
+  if(evCall>0.25) return {rec:"CALL",cls:"call",mix:mixOf(16,76,8)};
+  return {rec:"FOLD",cls:"fold",mix:mixOf(88,10,2)};
+}
+function combosOf(code, dead){
+  const deadSet=new Set(dead);
+  const out=[];
+  if(code.length===2){
+    const r=RANKS.indexOf(code[0]);
+    for(let s1=0;s1<4;s1++) for(let s2=s1+1;s2<4;s2++){
+      const a=cardId(r,s1),b=cardId(r,s2);
+      if(!deadSet.has(a)&&!deadSet.has(b)) out.push([a,b]);
+    }
+  } else {
+    const r1=RANKS.indexOf(code[0]), r2=RANKS.indexOf(code[1]), suited=code[2]==="s";
+    if(suited){
+      for(let s=0;s<4;s++){const a=cardId(r1,s),b=cardId(r2,s); if(!deadSet.has(a)&&!deadSet.has(b)) out.push([a,b]);}
+    } else {
+      for(let s1=0;s1<4;s1++) for(let s2=0;s2<4;s2++) if(s1!==s2){
+        const a=cardId(r1,s1),b=cardId(r2,s2);
+        if(!deadSet.has(a)&&!deadSet.has(b)) out.push([a,b]);
+      }
+    }
+  }
+  return out;
+}
+function presetCodes(kind, boardRanks){
+  const out=[];
+  for(const c of FLAT){
+    const h=parseCode(c);
+    if(kind==="any"){out.push(c);continue;}
+    const boardHi=Math.max(...boardRanks);
+    if(kind==="value"){
+      if(h.p && h.hi>=Math.max(7,boardHi-2)) out.push(c);
+      else if(!h.p && (h.hi>=boardHi && h.hi>=10)) out.push(c);
+      else if(h.p && h.hi>=8) out.push(c);
+    } else { /* wide */
+      if(h.p) out.push(c);
+      else if(h.hi>=9) out.push(c);
+      else if(h.s && h.hi-h.lo<=3 && h.hi>=7) out.push(c);
+    }
+  }
+  return out;
+}
+
+const board=[null,null,null,null,null];
+let pickSlot=0, rvStop=false, rvResult=null, rvView="oop";
+
+function renderBoard(){
+  const el=document.getElementById("boardSlots");
+  el.innerHTML="";
+  for(let i=0;i<5;i++){
+    const d=document.createElement("div");
+    const c=board[i];
+    d.className="cd"+(i===pickSlot?" on":"")+(c&&(c%13>=0)&&((c/13|0)%2===1)?" red":"");
+    d.textContent=c==null?"＋":(RANKS[c%13]+SUIT_SYM[SUITS[c/13|0]]);
+    if(c!=null && (c/13|0)%2===1) d.classList.add("red");
+    d.onclick=()=>{pickSlot=i; document.getElementById("cardPicker").classList.add("on"); renderBoard();};
+    el.appendChild(d);
+  }
+}
+function buildPicker(){
+  const p=document.getElementById("cardPicker");
+  let h="";
+  for(let s=0;s<4;s++){
+    for(let r=12;r>=0;r--){
+      const id=cardId(r,s);
+      const used=board.includes(id);
+      const red=s%2===1;
+      h+=`<span class="pc ${red?"red":"blk"}" data-id="${id}" style="${used?"opacity:.25":""}">${RANKS[r]}${SUIT_SYM[SUITS[s]]}</span>`;
+    }
+    h+="<br>";
+  }
+  p.innerHTML=h;
+  p.querySelectorAll(".pc").forEach(x=>x.onclick=()=>{
+    const id=+x.dataset.id;
+    if(board.includes(id)) return;
+    board[pickSlot]=id;
+    pickSlot=Math.min(4,pickSlot+1);
+    buildPicker(); renderBoard();
+  });
+}
+
+function capCombos(list, cap){
+  if(list.length<=cap) return list;
+  const scored=list.map((h,i)=>({h,i,v:0}));
+  scored.sort((a,b)=>a.i-b.i);
+  const keep=[], step=list.length/cap;
+  for(let k=0;k<cap;k++) keep.push(list[Math.min(list.length-1, Math.floor(k*step+0.5))]);
+  return keep;
+}
+function runRiver(){
+  if(board.some(c=>c==null)){document.getElementById("rvLog").textContent="请先点选 5 张公共牌。";return;}
+  rvStop=false;
+  const pot0=+document.getElementById("rvPot").value + (+document.getElementById("rvSquid").value||0);
+  const stack=+document.getElementById("rvStack").value;
+  const frac=+document.getElementById("rvBet").value;
+  const iters=+document.getElementById("rvIters").value||400;
+  const br=board.map(c=>c%13);
+  const oopC=presetCodes(document.getElementById("oopPreset").value,br);
+  const ipC=presetCodes(document.getElementById("ipPreset").value,br);
+  let oop=[], ip=[];
+  oopC.forEach(c=>oop.push(...combosOf(c,board).map(x=>({code:c,c:x}))));
+  ipC.forEach(c=>ip.push(...combosOf(c,board).map(x=>({code:c,c:x}))));
+  oop=capCombos(oop,96); ip=capCombos(ip,96);
+  const valO=oop.map(h=>eval7([...h.c,...board]));
+  const valI=ip.map(h=>eval7([...h.c,...board]));
+  const bet=Math.min(stack, pot0*frac);
+  const nO=oop.length, nI=ip.length;
+  const rO=Array.from({length:nO},()=>[0,0]);
+  const rOf=Array.from({length:nO},()=>[0,0]);
+  const rIchk=Array.from({length:nI},()=>[0,0]);
+  const rIbet=Array.from({length:nI},()=>[0,0]);
+  const sO=Array.from({length:nO},()=>[0.5,0.5]);
+  const sOf=Array.from({length:nO},()=>[0.5,0.5]);
+  const sIc=Array.from({length:nI},()=>[0.5,0.5]);
+  const sIb=Array.from({length:nI},()=>[0.5,0.5]);
+  const aO=Array.from({length:nO},()=>[0,0]);
+  const aOf=Array.from({length:nO},()=>[0,0]);
+  const aIc=Array.from({length:nI},()=>[0,0]);
+  const aIb=Array.from({length:nI},()=>[0,0]);
+  document.getElementById("rvLog").textContent=`河牌 CFR+ ${nO} vs ${nI} · 含 OOP 面对下注节点`;
+
+  function block(a,b){return a[0]===b[0]||a[0]===b[1]||a[1]===b[0]||a[1]===b[1];}
+  function acc(av, s, w){ av[0]+=w*s[0]; av[1]+=w*s[1]; }
+  function norm(av){
+    const t=av[0]+av[1];
+    return t>0 ? [av[0]/t, av[1]/t] : [0.5,0.5];
+  }
+
+  let it=0;
+  function step(){
+    if(rvStop||it>=iters){
+      const fO=sO.map((_,i)=>norm(aO[i]));
+      const fOf=sOf.map((_,i)=>norm(aOf[i]));
+      const fIc=sIc.map((_,j)=>norm(aIc[j]));
+      const fIb=sIb.map((_,j)=>norm(aIb[j]));
+      finishRiver(oop,ip,fO,fIc,fIb,fOf);
+      document.getElementById("rvLog").textContent=`完成 ${it} 次 · 平均策略 · 底池 ${pot0.toFixed(1)}（含鱿鱼）· 注 ${bet.toFixed(1)} · ${nO} vs ${nI}`;
+      return;
+    }
+    for(let i=0;i<nO;i++){ sO[i]=stratFrom(rO[i]); sOf[i]=stratFrom(rOf[i]); }
+    for(let j=0;j<nI;j++){ sIc[j]=stratFrom(rIchk[j]); sIb[j]=stratFrom(rIbet[j]); }
+    const w=it+1;
+
+    for(let i=0;i<nO;i++){
+      let evChk=0, evBet=0, evF=0, evCall=0, den=0;
+      for(let j=0;j<nI;j++){
+        if(block(oop[i].c,ip[j].c)) continue;
+        den++;
+        const show = valO[i]>valI[j]?1:valO[i]<valI[j]?-1:0;
+        const eq = show===1?1:show===0?0.5:0;
+        const evSD = show*(pot0/2);
+        const evFoldVsBet = -pot0/2;
+        const evCallVs = eq*(pot0/2+bet)+(1-eq)*(-pot0/2-bet);
+        evF += evFoldVsBet; evCall += evCallVs;
+        evChk += sIc[j][0]*evSD + sIc[j][1]*(sOf[i][0]*evFoldVsBet + sOf[i][1]*evCallVs);
+        evBet += sIb[j][0]*(pot0/2) + sIb[j][1]*evCallVs;
+      }
+      if(!den) continue;
+      evChk/=den; evBet/=den; evF/=den; evCall/=den;
+      const v0=sO[i][0]*evChk+sO[i][1]*evBet;
+      rO[i][0]=Math.max(0,rO[i][0]+evChk-v0);
+      rO[i][1]=Math.max(0,rO[i][1]+evBet-v0);
+      const vF=sOf[i][0]*evF+sOf[i][1]*evCall;
+      rOf[i][0]=Math.max(0,rOf[i][0]+evF-vF);
+      rOf[i][1]=Math.max(0,rOf[i][1]+evCall-vF);
+      acc(aO[i], sO[i], w); acc(aOf[i], sOf[i], w);
+    }
+    for(let j=0;j<nI;j++){
+      let evC=0,evB=0,evF=0,evCall=0,den=0;
+      for(let i=0;i<nO;i++){
+        if(block(oop[i].c,ip[j].c)) continue;
+        den++;
+        const show = valI[j]>valO[i]?1:valI[j]<valO[i]?-1:0;
+        const eq=show===1?1:show===0?0.5:0;
+        const evSD=show*(pot0/2);
+        const evCallVs=eq*(pot0/2+bet)+(1-eq)*(-(pot0/2+bet));
+        evC += evSD;
+        evB += sOf[i][0]*(pot0/2) + sOf[i][1]*evCallVs;
+        evF += -pot0/2;
+        evCall += evCallVs;
+      }
+      if(!den) continue;
+      evC/=den; evB/=den; evF/=den; evCall/=den;
+      const v1=sIc[j][0]*evC+sIc[j][1]*evB;
+      rIchk[j][0]=Math.max(0,rIchk[j][0]+evC-v1);
+      rIchk[j][1]=Math.max(0,rIchk[j][1]+evB-v1);
+      const v2=sIb[j][0]*evF+sIb[j][1]*evCall;
+      rIbet[j][0]=Math.max(0,rIbet[j][0]+evF-v2);
+      rIbet[j][1]=Math.max(0,rIbet[j][1]+evCall-v2);
+      acc(aIc[j], sIc[j], w); acc(aIb[j], sIb[j], w);
+    }
+    it++;
+    if(it%20===0) document.getElementById("rvLog").textContent=`CFR+ ${it}/${iters} · ${nO} vs ${nI} · 平均策略`;
+    requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+function finishRiver(oop,ip,sO,sIc,sIb,sOf){
+  function agg(list, strats, betIdx){
+    const map={};
+    list.forEach((h,i)=>{
+      if(!map[h.code]) map[h.code]={f:0,c:0,b:0,n:0};
+      const s=strats[i];
+      map[h.code].n++;
+      if(betIdx==="ob"){map[h.code].c+=s[0]; map[h.code].b+=s[1];}
+      if(betIdx==="of"){map[h.code].f+=s[0]; map[h.code].c+=s[1];}
+      if(betIdx==="ic"){map[h.code].c+=s[0]; map[h.code].b+=s[1];}
+      if(betIdx==="ib"){map[h.code].f+=s[0]; map[h.code].c+=s[1];}
+    });
+    Object.values(map).forEach(v=>{v.f/=v.n;v.c/=v.n;v.b/=v.n;});
+    return map;
+  }
+  rvResult={
+    oop:agg(oop,sO,"ob"),
+    oof:sOf?agg(oop,sOf,"of"):{},
+    ip:agg(ip,sIc,"ic"),
+    ipb:agg(ip,sIb,"ib")
+  };
+  drawRV();
+}
+function drawRV(){
+  if(!rvResult) return;
+  const map=rvResult[rvView];
+  const tb=document.getElementById("rvGrid");
+  let html="<tr><td class='lab'></td>"+RANK_CH.slice().reverse().map(r=>`<td class='lab'>${r}</td>`).join("")+"</tr>";
+  let bS=0,cS=0,fS=0,n=0;
+  for(let i=0;i<13;i++){
+    html+=`<tr><td class='lab'>${RANK_CH[12-i]}</td>`;
+    for(let j=0;j<13;j++){
+      const code=GRID[i][j];
+      const st=map[code];
+      if(!st){html+=`<td style="opacity:.2">${code}</td>`;continue;}
+      const f=st.f||0,c=st.c||0,b=st.b||0,t=f+c+b||1;
+      bS+=b;cS+=c;fS+=f;n++;
+      html+=`<td data-code="${code}">
+        <div class="cellbar" style="width:${b/t*100}%;background:#22c55e"></div>
+        <div class="cellbar" style="width:${c/t*100}%;background:#3b82f6;left:${b/t*100}%"></div>
+        <div class="cellbar" style="width:${f/t*100}%;background:#6b7280;left:${(b+c)/t*100}%"></div>
+        <span style="position:relative;z-index:1">${code}</span></td>`;
+    }
+    html+="</tr>";
+  }
+  tb.innerHTML=html;
+  document.getElementById("rvStats").innerHTML=n?`<span>进攻 ${(bS/n*100).toFixed(1)}%</span><span>被动 ${(cS/n*100).toFixed(1)}%</span><span>弃牌 ${(fS/n*100).toFixed(1)}%</span>`:"";
+  tb.querySelectorAll("td[data-code]").forEach(td=>td.onclick=()=>{
+    const st=map[td.dataset.code]; if(!st)return;
+    const el=document.getElementById("rvHand"); el.style.display="block";
+    el.textContent=`${td.dataset.code}  下注/加注 ${((st.b||0)*100).toFixed(1)}%   过牌/跟注 ${((st.c||0)*100).toFixed(1)}%   弃牌 ${((st.f||0)*100).toFixed(1)}%`;
+  });
+}
+
+/* ---------- 跟进模式 ---------- */
+const L = {
+  n:8, btn:5, hero:5, vil:-1, stack:100, pot:1.5,
+  heroCards:[null,null], board:[null,null,null,null,null],
+  pick:"h0", folded:new Set(),
+};
+function holeToCode(a,b){
+  if(a==null||b==null) return null;
+  const r1=a%13,r2=b%13,s1=a/13|0,s2=b/13|0;
+  const hi=Math.max(r1,r2), lo=Math.min(r1,r2);
+  if(hi===lo) return RANKS[hi]+RANKS[hi];
+  return RANKS[hi]+RANKS[lo]+(s1===s2?"s":"o");
+}
+function cardTxt(c){
+  if(c==null) return "＋";
+  return RANKS[c%13]+SUIT_SYM[SUITS[c/13|0]];
+}
+function isRed(c){return c!=null && ((c/13|0)%2===1)}
+function seatPosLabels(n,btn){
+  const lab=Array(n).fill("");
+  if(n===2){lab[btn]="BTN"; lab[(btn+1)%2]="BB"; return lab;}
+  lab[btn]="BTN";
+  lab[(btn+1)%n]="SB";
+  lab[(btn+2)%n]="BB";
+  const mid=n-3;
+  const names={1:["CO"],2:["HJ","CO"],3:["LJ","HJ","CO"],4:["UTG","LJ","HJ","CO"],5:["UTG","MP","LJ","HJ","CO"],6:["UTG","UTG+1","MP","LJ","HJ","CO"]}[mid]
+    || Array.from({length:mid},(_,i)=>"P"+i);
+  for(let k=0;k<mid;k++) lab[(btn+3+k)%n]=names[k];
+  return lab;
+}
+function holeReady(){ return L.heroCards[0]!=null && L.heroCards[1]!=null; }
+function boardN(){ return L.board.filter(c=>c!=null).length; }
+function liveStreet(){
+  const n=boardN();
+  if(n>=5) return "河牌";
+  if(n===4) return "转牌";
+  if(n===3) return "翻牌";
+  return "翻前";
+}
+function holeLocked(){ return holeReady() && APP.work!=="review"; }
+function nextDealLabel(){
+  if(!holeReady()) return "先切两张底牌";
+  const n=boardN();
+  if(n>=5) return "已到河牌";
+  if(n===4) return "发河牌";
+  if(n===3) return "发转牌";
+  if(n>0) return "继续发翻牌";
+  return "发翻牌";
+}
+function nextBoardIndex(){
+  const n=boardN();
+  if(n>=5) return -1;
+  if(n>=3) return n;
+  return n;
+}
+function syncStreetActions(){
+  const sel=document.getElementById("lvAct");
+  if(!sel) return;
+  const street=liveStreet();
+  const pre=["open","3bet","jam","limp"];
+  const post=["bet","raise","check","jam"];
+  const allow=street==="翻前"?pre:post;
+  [...sel.options].forEach(o=>{ o.hidden = allow.indexOf(o.value)<0; });
+  if(allow.indexOf(sel.value)<0){
+    sel.value = street==="翻前"?"open":"bet";
+    const pot=+document.getElementById("lvPot").value||0;
+    if(street!=="翻前"){
+      const def=Math.max(1, Math.round(pot*0.66*2)/2);
+      document.getElementById("lvSize").value=def;
+      document.getElementById("lvCall").value=def;
+    }
+  }
+}
+function renderStreetBar(){
+  const bar=document.getElementById("lvStreetBar");
+  if(!bar) return;
+  const cur=liveStreet();
+  const order=["翻前","翻牌","转牌","河牌"];
+  const idx=order.indexOf(cur);
+  bar.innerHTML=order.map((name,i)=>{
+    const cls=i<idx?"done":(i===idx?"on":"");
+    return `<span class="stchip ${cls}">${name}</span>`;
+  }).join("<span class='stchip' style='border:0;background:transparent;padding:6px 2px'>→</span>");
+  const deal=document.getElementById("lvDealNext");
+  if(deal){
+    deal.textContent=nextDealLabel();
+    deal.disabled=!holeReady() || boardN()>=5;
+  }
+}
+const APP = {fmt:null, work:null, page:"auth", labTool:null, user:null};
+const AUTH_USERS="dx_users_v1", AUTH_SESS="dx_session_v1";
+function sha256(text){
+  let h=2166136261;
+  const s=String(text);
+  for(let i=0;i<s.length;i++){ h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return ("00000000"+(h>>>0).toString(16)).slice(-8);
+}
+function loadUsers(){try{return JSON.parse(localStorage.getItem(AUTH_USERS)||"{}");}catch(e){return {};}}
+function saveUsers(u){try{localStorage.setItem(AUTH_USERS, JSON.stringify(u));}catch(e){}}
+function currentSession(){
+  try{
+    const raw=localStorage.getItem(AUTH_SESS)||sessionStorage.getItem(AUTH_SESS)||"null";
+    const s=JSON.parse(raw);
+    if(!s||!s.user||!s.exp||Date.now()>s.exp) return null;
+    return s;
+  }catch(e){return null;}
+}
+function setSession(user){
+  const rec=JSON.stringify({user, exp:Date.now()+1000*60*60*24*7});
+  try{localStorage.setItem(AUTH_SESS, rec);}catch(e){}
+  try{sessionStorage.setItem(AUTH_SESS, rec);}catch(e){}
+  APP.user=user;
+}
+function clearSession(){
+  try{localStorage.removeItem(AUTH_SESS);}catch(e){}
+  try{sessionStorage.removeItem(AUTH_SESS);}catch(e){}
+  APP.user=null;
+}
+function enterGuest(){ setSession("游客"); goPage("home"); }
+function refreshUserChip(){
+  const chip=document.getElementById("userChip");
+  const name=document.getElementById("userName");
+  if(!chip) return;
+  if(APP.user){chip.classList.add("on"); name.textContent=APP.user;}
+  else chip.classList.remove("on");
+}
+function doRegister(user, pass, pass2){
+  user=(user||"").trim();
+  if(user.length<2) return "用户名至少 2 个字符";
+  if((pass||"").length<4) return "密码至少 4 位";
+  if(pass!==pass2) return "两次密码不一致";
+  const db=loadUsers();
+  if(db[user]) return "该用户名已注册，请直接登录";
+  const salt=Math.random().toString(36).slice(2)+Date.now();
+  db[user]={salt, hash:sha256(salt+"|"+pass), t:Date.now()};
+  saveUsers(db);
+  setSession(user);
+  return null;
+}
+function doLogin(user, pass){
+  user=(user||"").trim();
+  const db=loadUsers();
+  const rec=db[user];
+  if(!rec) return "账号不存在，请先注册，或点「游客进入」";
+  if(sha256(rec.salt+"|"+pass)!==rec.hash) return "密码不正确";
+  setSession(user);
+  return null;
+}
+function anteMode(){
+  return document.getElementById("lvAnteMode")?.value || "bb";
+}
+function startPotBB(){
+  if(APP.fmt!=="mtt") return 1.5;
+  const m=anteMode();
+  if(m==="none") return 1.5;
+  if(m==="double") return 3.5; /* SB 0.5 + BB 1 + 2BB ante */
+  return 2.5; /* 大盲 Ante：SB+BB+1BB */
+}
+function applyAnteMode(){
+  const m=anteMode();
+  const map={none:0,bb:1,double:2};
+  const a=document.getElementById("lvMttAnte");
+  if(a) a.value=map[m]??1;
+  if(typeof setPotFields==="function") setPotFields(startPotBB());
+}
+function liveAnte(){
+  if(APP.fmt==="mtt"){
+    const typed=+(document.getElementById("lvMttAnte")?.value||0);
+    const m=anteMode();
+    if(m==="none") return 0;
+    if(m==="double") return typed||2;
+    return typed||1;
+  }
+  if(S.last && S.last.rows && S.last.rows[S.you]) return S.last.rows[S.you].ante||0;
+  return +(document.getElementById("pfAnte")?.value||0);
+}
+function liveDelta(){
+  if(APP.fmt==="mtt") return 0;
+  if(S.last && S.last.rows && S.last.rows[S.you]) return Math.max(0,S.last.rows[S.you].dEV||0);
+  return 0;
+}
+function mttBubble(){
+  if(APP.fmt!=="mtt") return 0;
+  return Math.max(0, Math.min(10, +(document.getElementById("lvBubble")?.value||0))) / 10;
+}
+function rfiWeight(code,pos,ante,stack){
+  const st=rfiFreq(code,pos==="BTN"||pos==="SB"||pos==="CO"||pos==="HJ"||pos==="LJ"||pos==="MP"||pos==="UTG"||pos==="UTG+1"?pos:"CO",ante,stack);
+  return (st.raise||0)+(st.allin||0)*1.1+(st.limp||0)*0.4;
+}
+function vilSquidState(){
+  const sel=document.getElementById("lvVilState")?.value||"auto";
+  if(sel==="hunt") return {safe:false,hunt:true,desperate:S.last&&S.last.U<=2};
+  if(sel==="safe") return {safe:true,hunt:false,desperate:false};
+  let safe=false;
+  if(L.vil>=0 && S.counts && S.counts[L.vil]>0) safe=true;
+  if(L.vil>=0 && S.hasSquid && S.hasSquid[L.vil]) safe=true;
+  const U=S.last?S.last.U:S.n;
+  const hunt=!safe && APP.fmt==="squid";
+  return {safe, hunt, desperate: hunt && U<=2};
+}
+function villRange(pos,act,ante,stack,dead,ctx){
+  ctx=ctx||{};
+  const street=ctx.street|| (typeof liveStreet==="function"?liveStreet():"翻前");
+  const sizeFrac = ctx.sizeFrac!=null ? ctx.sizeFrac : 0.5;
+  const st = ctx.st || (APP.fmt==="squid" ? vilSquidState() : {safe:false,hunt:false,desperate:false});
+  const out=[];
+  for(const code of FLAT){
+    let w=rfiWeight(code,pos||"CO",ante,stack);
+    const h=parseCode(code);
+    const made = h.p || h.hi>=10;
+    const air = !h.p && h.hi<=9 && !h.s;
+    const spec = !h.p && h.s && (h.hi-h.lo)<=2;
+    if(st.hunt){
+      w *= 1.18;
+      if(h.s || h.p || h.hi>=10) w += 10;
+      if(st.desperate && (h.s || h.p || h.hi>=9)) w += 14;
+    }
+    if(st.safe){
+      w *= 0.78;
+      if(!(made || (h.hi===12 && h.lo>=9) || code==="AQs" || code==="KQs" || (h.p && h.hi>=6))) w *= 0.18;
+    }
+    if(act==="limp"){ w = (!h.p && h.hi<12 ? Math.max(8, 40-w) : w*0.25); }
+    else if(act==="3bet"||act==="jam"){
+      const polar = (h.p && h.hi>=8) || (h.hi===12 && h.lo>=10) || (h.s && h.hi===12 && h.lo<=5) || (h.s && h.hi===11 && h.lo<=4);
+      if(st.hunt) w = polar ? Math.max(w, 50) : w*0.22;
+      else if(st.safe) w = polar ? Math.max(w, 62) : w*0.05;
+      else w = polar ? Math.max(w, 55) : w*0.08;
+      if(act==="jam") w *= (h.p || h.hi>=11) ? 1.3 : (st.desperate?0.9:0.5);
+    } else if(act==="bet"||act==="raise"){
+      if(street!=="翻前"){
+        if(act==="raise"){
+          w = made? w*1.25 : (spec? w*0.55 : w*0.12);
+          if(sizeFrac>=0.85) w = made? w*1.2 : w*0.45;
+        } else {
+          if(sizeFrac<=0.4){
+            w = made? w : (air? w*0.55 : w*0.85);
+          } else if(sizeFrac>=0.9){
+            w = made? w*1.2 : (spec? w*0.28 : air? w*0.04 : w*0.22);
+          } else {
+            w = made? w : (air? w*0.28 : w*0.65);
+          }
+        }
+      }
+    } else if(act==="check"){
+      w = Math.max(4, 80-w);
+      if(st.safe) w = made? w*0.6 : w*1.15;
+    }
+    if(w>6){
+      const combos = code.length===2?6:code.endsWith("s")?4:12;
+      out.push({code,w,combos});
+    }
+  }
+  const t=out.reduce((s,x)=>s+x.w,0)||1;
+  out.forEach(x=>x.p=x.w/t);
+  out.sort((a,b)=>b.w-a.w);
+  return out;
+}
+function filterBlocked(range, dead){
+  return range.map(x=>{
+    const combos=combosOf(x.code, dead);
+    return {...x, live:combos.length, combosList:combos};
+  }).filter(x=>x.live>0);
+}
+function eqHeroVsRange(heroCode, range, dead, boardCards){
+  const hi=IDX[heroCode];
+  if(hi==null) return 0.5;
+  const street=liveStreet();
+  const nBoard=boardCards.filter(Boolean).length;
+  if(street==="翻前" || nBoard<3){
+    let num=0,den=0;
+    range.forEach(r=>{
+      const w=r.p*(r.live||1);
+      num+=w*pairEq(hi,IDX[r.code]); den+=w;
+    });
+    return den?num/den:0.5;
+  }
+  const heroC=combosOf(heroCode, dead.filter(c=>!(L.heroCards.includes(c))) );
+  /* use actual hole if set */
+  let hc=L.heroCards;
+  if(hc[0]==null||hc[1]==null) return 0.5;
+  const usedBoard=boardCards.filter(c=>c!=null);
+  const hv = usedBoard.length>=5 ? eval7([...hc, ...usedBoard]) : null;
+  let wins=0, lose=0, ties=0, den=0;
+  const sample = range.slice(0,28);
+  sample.forEach(r=>{
+    const list=(r.combosList||combosOf(r.code, dead)).slice(0,4);
+    list.forEach(vc=>{
+      if(vc[0]===hc[0]||vc[0]===hc[1]||vc[1]===hc[0]||vc[1]===hc[1]) return;
+      const w=r.p;
+      if(usedBoard.length>=5){
+        const vv=eval7([...vc,...usedBoard]);
+        den+=w;
+        if(hv>vv) wins+=w; else if(hv<vv) lose+=w; else ties+=w;
+      } else {
+        const vv=evalNow([...vc,...usedBoard]);
+        const hv2=evalNow([...hc,...usedBoard]);
+        den+=w;
+        if(hv2>vv) wins+=w; else if(hv2<vv) lose+=w; else ties+=w;
+      }
+    });
+  });
+  if(!den) return 0.5;
+  return (wins+ties*0.5)/den;
+}
+/* ========== 跟进解算流水线 ==========
+   1 范围：按位置开池表 × 本街动作收缩
+   2 权益：翻前 pairEq；翻后 evalNow 比成牌，听牌加权益
+   3 价格：底池赔率 + 跟注/加注 EV；FE = 0.82 * invest/(pot+invest)
+   4 策略：RFI sigmoid / 对抗开池 softmax / 翻后结构 + 无差别混合
+   5 输出：主建议 + 混合频率
+*/
+function roundBB(x){ return Math.max(0.5, Math.round(Number(x)*2)/2); }
+function sizeCands(kind, pot, vilSize, stack){
+  const p=Math.max(0.5, pot||1);
+  const st=Math.max(1, stack||100);
+  const vs=Math.max(0.5, vilSize||2.5);
+  const out=[];
+  const add=(lab,bb)=>{
+    bb=roundBB(Math.min(st, bb));
+    if(bb<0.5) return;
+    if(out.some(x=>Math.abs(x.bb-bb)<0.24)) return;
+    out.push({lab, bb, frac: bb/p});
+  };
+  if(kind==="bet"){
+    add("1/3池", p*0.33); add("1/2池", p*0.5); add("2/3池", p*0.66);
+    add("满池", p); add("超池", p*1.5);
+    if(st <= p*2.8) add("全压", st);
+  } else {
+    add("2.2x", vs*2.2); add("3x", vs*3); add("到满池", p+vs);
+    add("全压", st);
+  }
+  return out.length?out:[{lab:"满池", bb:roundBB(Math.min(st,p)), frac:1}];
+}
+function evAtSize(eq, pot, bet, stack){
+  const b=Math.min(stack, Math.max(0.5, bet));
+  const fe=gtoFe(pot, b);
+  return {ev: evRaiseCorrect(eq, pot, b, fe), fe, b};
+}
+function pickBestSize(eq, pot, cands, stack, biasFn){
+  let best=null, bestEv=-1e9;
+  const rows=cands.map(c=>{
+    const got=evAtSize(eq, pot, c.bb, stack);
+    let ev=got.ev * 0.12;
+    if(biasFn) ev += biasFn(c)*4;
+    const row={...c, ev:got.ev, evAdj:ev, fe:got.fe};
+    if(ev>bestEv){bestEv=ev; best=row;}
+    return row;
+  });
+  return {best: best||rows[0], rows};
+}
+function sizeBias(shape, street, kind){
+  const c=shape&&shape.cat;
+  const strong=["nuts","made","trips","two","over"].includes(c);
+  const draw=["fd","oesd","combo"].includes(c);
+  const river=street==="河牌";
+  return (cand)=>{
+    const f=cand.frac||0;
+    if(cand.lab==="全压" && !(strong && river) && f>2.2) return -1.4;
+    if(strong && river) return f>=0.7 ? 0.35 : 0;
+    if(strong) return (f>=0.55 && f<=1.15) ? 0.28 : (f<0.4?-0.12:0.05);
+    if(c==="tp") return (f>=0.3 && f<=0.55) ? 0.18 : (f>0.9?-0.15:0);
+    if(draw && !river) return f<=0.4 ? 0.2 : (f>0.75?-0.2:0);
+    if(c==="pair") return f<=0.4 ? 0.08 : -0.12;
+    return f<=0.5 ? 0.05 : -0.05;
+  };
+}
+function vilSizeFrac(size, pot){
+  if(!pot) return 0.5;
+  return Math.max(0, size/pot);
+}
+function foldEquity(act, heroPos, pot, invest){
+  const geo=gtoFe(pot, invest);
+  const pos = (heroPos==="BTN"||heroPos==="CO") ? 0.04 : (heroPos==="SB"?-0.03:0);
+  const actAdj = act==="open"?0.05 : (act==="jam"||act==="3bet"?-0.08:0);
+  return Math.max(0.08, Math.min(0.52, geo+pos+actAdj));
+}
+function solveSpot(p){
+  const {street,heroCode,heroPos,vilPos,act,size,pot,callAmt,stack,ante,dEV,range,dead,board,heroCards,fmt,bubble}=p;
+  let eq=eqHeroVsRange(heroCode, range, dead, board);
+  const shape = (street!=="翻前" && heroCards[0]!=null) ? postflopShape(heroCards, board) : null;
+  if(shape && street!=="河牌"){
+    if(shape.fd && shape.oesd) eq=Math.min(0.74, eq+0.16);
+    else if(shape.fd) eq=Math.min(0.70, eq+0.12);
+    else if(shape.oesd) eq=Math.min(0.66, eq+0.08);
+    else if(shape.gut) eq=Math.min(0.60, eq+0.04);
+  }
+  const potEff=pot+dEV;
+  const need=(potEff+callAmt)>0 ? callAmt/(potEff+callAmt) : 0;
+  let evCall=evCallCorrect(eq, potEff, callAmt);
+  if(fmt==="mtt") evCall -= bubble * callAmt * (stack<25?0.45:0.22);
+  const kind = (act==="check" || (street==="翻前" && act==="open" && size<=0.01)) ? "bet" : "raise";
+  const cands=sizeCands(kind, potEff, size||callAmt, stack);
+  const picked=pickBestSize(eq, potEff, cands, stack, sizeBias(shape, street, kind));
+  const invest = picked.best ? picked.best.bb : Math.max(callAmt*2.2, potEff*0.75);
+  const fe=picked.best ? picked.best.fe : foldEquity(act, heroPos, potEff, invest);
+  let evRaise=picked.best ? picked.best.ev : evRaiseCorrect(eq, potEff, invest, fe);
+  if(fmt==="mtt" && stack<=22) evRaise += 0.25 + bubble*0.3;
+  const sizeLab = picked.best ? `${picked.best.bb}BB · ${picked.best.lab}` : "";
+  const vFrac=vilSizeFrac(size, potEff);
+  let rec="CALL", cls="call", mix={f:8,c:72,r:20};
+  if(street==="翻前" && act==="open" && size<=0.01){
+    const rf=rfiFreq(heroCode,heroPos,ante,stack);
+    mix={f:rf.fold,c:rf.limp,r:(rf.raise||0)+(rf.allin||0)};
+    const openTo=roundBB(ante>=2?2.5: (ante>=1?2.3:2.5));
+    if(rf.raise+rf.allin>=55){rec=`RAISE ${openTo}BB`; cls="raise";}
+    else if(rf.limp>15){rec="LIMP / RAISE "+openTo+"BB"; cls="mix";}
+    else {rec="FOLD"; cls="fold";}
+  } else if(street==="翻前" && (act==="open"||act==="3bet"||act==="jam"||act==="limp")){
+    const vs=faceOpenDecision(heroCode,heroPos,vilPos,eq,evCall,evRaise);
+    rec=vs.rec; cls=vs.cls; mix=vs.mix;
+    if(cls==="raise"){
+      const ip = lateRank(heroPos)>lateRank(vilPos) || heroPos==="BB";
+      const to=roundBB((size||2.5)*(ip?2.8:3.6));
+      rec = rec.indexOf("RAISE")>=0 || rec.indexOf("加")>=0 ? `3-BET ${to}BB` : rec+" "+to+"BB";
+    }
+  } else if(shape){
+    const vs=postflopDecision(shape, act, eq, evCall, evRaise, street, {vFrac, sizeLab});
+    rec=vs.rec; cls=vs.cls; mix=vs.mix;
+  } else {
+    const packed=packMix(softmaxMix([0, evCall, evRaise], 0.26));
+    const vs=recFromMix(packed);
+    rec=vs.rec; cls=vs.cls; mix=vs.mix;
+    if(cls==="raise" && sizeLab) rec=kind==="bet"?`BET ${sizeLab}`:`RAISE ${sizeLab}`;
+  }
+  return {eq,need,evCall,evRaise,rec,cls,mix,shape,fe,sizeRows:picked.rows,sizeBest:picked.best,vFrac};
+}
+function liveRecommend(){
+  if(!document.getElementById("lvHeroSlots")) return;
+  syncStreetActions();
+  renderStreetBar();
+  const street=liveStreet();
+  const ante=liveAnte();
+  const dEV=liveDelta();
+  const stack=+document.getElementById("lvStack").value||100;
+  const pot=+document.getElementById("lvPot").value||0;
+  const size=+document.getElementById("lvSize").value||0;
+  const callAmt=+document.getElementById("lvCall").value||0;
+  const act=document.getElementById("lvAct").value;
+  const labs=seatPosLabels(L.n,L.btn);
+  const vilPos = L.vil>=0 ? labs[L.vil] : (document.getElementById("lvVillain").value||"CO");
+  const heroPos=labs[L.hero]||"BTN";
+  const heroCode=holeToCode(L.heroCards[0],L.heroCards[1]);
+  const dead=[...L.heroCards,...L.board].filter(c=>c!=null);
+  const vFrac0 = pot>0? size/pot : 0.5;
+  const st=vilSquidState();
+  const raw=villRange(vilPos,act,ante,stack,dead,{street,sizeFrac:vFrac0,st});
+  const range=filterBlocked(raw,dead);
+
+  document.getElementById("lvStreet").textContent =
+    `${street} · 你 ${heroPos}${heroCode?" · "+heroCode:""} · 对 ${vilPos} ${({open:"开池", "3bet":"3-Bet", jam:"全压", bet:"下注", raise:"加注", check:"过牌", limp:"跛入"})[act]} ${size||""}BB`;
+
+  if(!heroCode){
+    document.getElementById("lvAction").textContent="切手牌";
+    document.getElementById("lvAction").className="rec-action";
+    document.getElementById("lvMix").innerHTML="";
+    document.getElementById("lvEq").textContent="—";
+    document.getElementById("lvNeed").textContent="—";
+    document.getElementById("lvEvCall").textContent="—";
+    document.getElementById("lvEvRaise").textContent="—";
+    const now=document.getElementById("lvNowLine");
+    if(now) now.textContent="先点两张手牌，再确认对家动作。建议会出现在右侧。";
+    document.getElementById("lvWhy").innerHTML=`<h3>等待底牌</h3><p>左侧切手牌和对家动作，右侧立刻出建议。</p>`;
+    const emptyP=document.getElementById("lvSizePicks"); if(emptyP) emptyP.innerHTML="";
+    drawLiveRange(range,null);
+    return;
+  }
+
+  const solved=solveSpot({
+    street,heroCode,heroPos,vilPos,act,size,pot,callAmt,stack,ante,dEV,
+    range,dead,board:L.board,heroCards:L.heroCards,
+    fmt:APP.fmt, bubble:mttBubble()
+  });
+  const {eq,need,evCall,evRaise,rec,cls,mix,shape}=solved;
+
+  document.getElementById("lvAction").textContent=rec;
+  document.getElementById("lvAction").className="rec-action "+cls;
+  document.getElementById("lvMix").innerHTML=
+    `<i style="width:${mix.f}%;background:#6b7280"></i><i style="width:${mix.c}%;background:#3b82f6"></i><i style="width:${mix.r}%;background:#22c55e"></i>`;
+  const picks=document.getElementById("lvSizePicks");
+  if(picks){
+    const rows=solved.sizeRows||[];
+    const best=solved.sizeBest;
+    picks.innerHTML = rows.length
+      ? rows.map(r=>`<span class="${best && Math.abs(r.bb-best.bb)<0.2?"on":""}">${r.lab} ${r.bb}BB · EV ${fmt(r.ev)}</span>`).join("")
+      : "";
+  }
+  document.getElementById("lvEq").textContent=(eq*100).toFixed(1)+"%";
+  document.getElementById("lvNeed").textContent=(need*100).toFixed(1)+"%";
+  document.getElementById("lvEvCall").textContent=fmt(evCall);
+  document.getElementById("lvEvRaise").textContent=fmt(evRaise);
+  const why = evCall>=0
+    ? `权益 ${(eq*100).toFixed(1)}% 高于跟注门槛 ${(need*100).toFixed(1)}%。对家 ${size}BB ≈ 池的 ${((solved.vFrac||0)*100).toFixed(0)}%。加注档位已按 EV 比较（1/3～超池 / 2.2x～全压）。`
+    : `权益不够支付 ${callAmt}BB（对家 ${size}BB，占池 ${((solved.vFrac||0)*100).toFixed(0)}%）。`;
+  const fmtNote = APP.fmt==="mtt"
+    ? `赛制 MTT / 无鱿鱼。前注 ${liveAnte().toFixed(2)}BB，泡沫 ${(+document.getElementById("lvBubble").value||0)}/10，剩余 ${document.getElementById("lvLeft").value} 人。`
+    : `赛制鱿鱼桌。感知前注 ${ante.toFixed(2)}BB，抢主池 ΔEV ${dEV.toFixed(1)}BB。对家${st.safe?"已有鱿（紧价值）":st.desperate?"无鱿决战（极宽）":st.hunt?"无鱿在抢（偏宽）":""}。`;
+  const shapeNote = shape && shape.cat && shape.cat!=="pre" ? `本街结构：${shape.cat}${shape.fd?" · 同花听":""}${shape.oesd?" · 两头顺":""}。` : "";
+  document.getElementById("lvWhy").innerHTML=`<h3>${rec} · vs ${vilPos}</h3><p>${fmtNote} ${shapeNote} ${why} 对手范围约 ${range.length} 类起手牌 · 尺度占池 ${((solved.vFrac||vFrac0)*100).toFixed(0)}%。</p>`;
+  const now=document.getElementById("lvNowLine");
+  if(now) now.innerHTML=`你拿 <b>${heroCode}</b> 在 <b>${heroPos}</b>，对家 <b>${vilPos}</b> ${( {open:"开池","3bet":"3-Bet",jam:"全压",bet:"下注",raise:"加注",check:"过牌",limp:"跛入"} )[act]} <b>${size||0}BB</b> → 建议 <b>${rec}</b>`;
+  drawLiveRange(range, heroCode);
+  updateCompare(rec, cls);
+}
+function drawLiveRange(range, heroCode){
+  const top=range.slice(0,18);
+  const combos=range.reduce((s,x)=>s+(x.live||x.combos||0),0);
+  document.getElementById("lvRangeMeta").innerHTML=`<span>种类 ${range.length}</span><span>组合 ~${combos}</span><span>对家 ${document.getElementById("lvVillain").value||"—"}</span>`;
+  document.getElementById("lvRangeList").innerHTML=top.map((x,i)=>`<div class="rchip"><b>${x.code}</b><em>#${i+1} · 权重 ${(x.p*100).toFixed(1)}% · ${x.live||x.combos} combo</em></div>`).join("")||"<div class='hint'>范围为空</div>";
+  const wmap=Object.fromEntries(range.map(x=>[x.code,x]));
+  const tb=document.getElementById("lvGrid");
+  let html="<tr><td class='lab'></td>"+RANK_CH.slice().reverse().map(r=>`<td class='lab'>${r}</td>`).join("")+"</tr>";
+  const maxw=Math.max(...range.map(x=>x.w),1);
+  for(let i=0;i<13;i++){
+    html+=`<tr><td class='lab'>${RANK_CH[12-i]}</td>`;
+    for(let j=0;j<13;j++){
+      const code=GRID[i][j];
+      const hit=wmap[code];
+      const mine=code===heroCode;
+      if(!hit){html+=`<td style="opacity:.18">${code}</td>`;continue;}
+      const a=0.25+0.75*(hit.w/maxw);
+      html+=`<td data-code="${code}" style="background:rgba(255,45,135,${a.toFixed(2)});${mine?"outline:2px solid #e8c547":""}">${code}</td>`;
+    }
+    html+="</tr>";
+  }
+  tb.innerHTML=html;
+}
+
+function renderLiveSeats(){
+  L.n = +document.getElementById("lvN").value || S.n;
+  const labs=seatPosLabels(L.n,L.btn);
+  if(L.hero>=L.n) L.hero=L.n-1;
+  if(L.vil>=L.n) L.vil=-1;
+  const box=document.getElementById("lvSeats");
+  box.innerHTML="";
+  for(let i=0;i<L.n;i++){
+    const el=document.createElement("div");
+    const folded=L.folded.has(i);
+    el.className="lvseat"+(i===L.hero?" hero":"")+(i===L.vil?" vil":"")+(folded?" fold":"");
+    el.innerHTML=`<div class="pos">${labs[i]}${i===L.btn?" ●":""}</div>
+      <div>${i===L.hero?"你":("座位 "+(i+1))}${folded?" · 已弃":""}</div>
+      <button class="lvtag ${i===L.hero?"on":""}" data-hero="${i}">我</button>
+      <button class="lvtag vil ${i===L.vil?"on":""}" data-vil="${i}">对家</button>`;
+    box.appendChild(el);
+  }
+  box.querySelectorAll("[data-hero]").forEach(b=>b.onclick=()=>{L.hero=+b.dataset.hero; S.you=L.hero; renderLiveSeats(); liveRecommend();});
+  box.querySelectorAll("[data-vil]").forEach(b=>b.onclick=()=>{
+    L.vil=+b.dataset.vil;
+    if(L.vil===L.hero) L.vil=-1;
+    fillVilSelect(); renderLiveSeats(); liveRecommend();
+  });
+  fillVilSelect();
+}
+function fillVilSelect(){
+  const sel=document.getElementById("lvVillain");
+  const labs=seatPosLabels(L.n,L.btn);
+  const cur=sel.value;
+  sel.innerHTML="";
+  for(let i=0;i<L.n;i++){
+    if(i===L.hero) continue;
+    const o=document.createElement("option");
+    o.value=labs[i]; o.textContent=labs[i]+" · 座"+(i+1);
+    if(L.vil===i || (!L.vil&&labs[i]===cur)) o.selected=true;
+    sel.appendChild(o);
+  }
+  if(L.vil<0){
+    /* default CO or BTN */
+    const pref=["BTN","CO","SB","UTG"];
+    for(const p of pref){
+      const idx=labs.indexOf(p);
+      if(idx>=0 && idx!==L.hero){L.vil=idx; sel.value=p; break;}
+    }
+  } else sel.value=labs[L.vil];
+}
+function makeCardEl(c, pickKey, mode){
+  const d=document.createElement("div");
+  d.className="cd"+(L.pick===pickKey?" on":"")+(isRed(c)?" red":"")+(mode==="lock"?" lock":"")+(mode==="wait"?" wait":"");
+  d.textContent=cardTxt(c);
+  if(mode==="pick"){
+    d.onclick=()=>{
+      L.pick=pickKey;
+      document.getElementById("lvPicker").classList.add("on");
+      renderLiveCards();
+      buildLivePicker();
+    };
+  }
+  return d;
+}
+function renderLiveCards(){
+  const hs=document.getElementById("lvHeroSlots");
+  if(!hs) return;
+  hs.innerHTML="";
+  const locked=holeLocked();
+  for(let i=0;i<2;i++){
+    const mode=locked?"lock":"pick";
+    hs.appendChild(makeCardEl(L.heroCards[i], "h"+i, mode));
+  }
+  const hint=document.getElementById("lvHoleHint");
+  if(hint){
+    hint.textContent = !holeReady()
+      ? "点两张空格，在选牌器里选底牌。选完这两张会留在这里，直到点「下一手」。"
+      : "底牌已锁定在本手。发翻/转/河只往空格加牌。点「下一手」再切新底牌。";
+  }
+  const flop=document.getElementById("lvFlopSlots");
+  const turn=document.getElementById("lvTurnSlot");
+  const river=document.getElementById("lvRiverSlot");
+  if(flop){
+    flop.innerHTML="";
+    for(let i=0;i<3;i++){
+      const ready=holeReady() && (i===0?true:L.board[i-1]!=null);
+      const mode=(!holeReady() || !ready)?"wait":"pick";
+      flop.appendChild(makeCardEl(L.board[i], "b"+i, mode));
+    }
+  }
+  if(turn){
+    turn.innerHTML="";
+    const mode=boardN()>=3?"pick":"wait";
+    turn.appendChild(makeCardEl(L.board[3], "b3", mode));
+  }
+  if(river){
+    river.innerHTML="";
+    const mode=boardN()>=4?"pick":"wait";
+    river.appendChild(makeCardEl(L.board[4], "b4", mode));
+  }
+  renderStreetBar();
+}
+function buildLivePicker(){
+  const p=document.getElementById("lvPicker");
+  if(!p) return;
+  const used=new Set([...L.heroCards,...L.board].filter(c=>c!=null));
+  let tip="先选两张底牌。";
+  if(!holeReady()) tip="点两张底牌，选完锁定，再点「发翻牌」。";
+  else if(boardN()<3) tip="按顺序发 3 张翻牌。发满之前不算翻后。";
+  else if(boardN()===3) tip="翻牌已齐。点「发转牌」继续。";
+  else if(boardN()===4) tip="转牌已发。点「发河牌」继续。";
+  else tip="河牌已齐。本手公共牌不再增加。";
+  let h="";
+  for(let s=0;s<4;s++){
+    for(let r=12;r>=0;r--){
+      const id=cardId(r,s);
+      h+=`<span class="pc ${s%2?"red":"blk"}" data-id="${id}" style="${used.has(id)?"opacity:.25":""}">${RANKS[r]}${SUIT_SYM[SUITS[s]]}</span>`;
+    }
+    h+="<br>";
+  }
+  p.innerHTML=h+`<div class='hint'>${tip}</div>`;
+  p.querySelectorAll(".pc").forEach(x=>x.onclick=()=>{
+    const id=+x.dataset.id;
+    if(used.has(id)) return;
+    if(!L.pick) L.pick = holeReady() ? "b"+Math.max(0,nextBoardIndex()) : "h0";
+    if(L.pick[0]==="h"){
+      if(holeLocked()) return;
+      L.heroCards[+L.pick[1]]=id;
+      if(L.heroCards[0]==null) L.pick="h0";
+      else if(L.heroCards[1]==null) L.pick="h1";
+      else {
+        L.pick="b0";
+        p.classList.remove("on");
+      }
+    } else {
+      const i=+L.pick.slice(1);
+      if(!holeReady()) return;
+      const needPrev = i>=1 && i<=4 ? i-1 : -1;
+      if(needPrev>=0 && L.board[needPrev]==null && L.board[i]==null) return;
+      L.board[i]=id;
+      if(i<2){
+        L.pick="b"+(i+1); /* 翻牌连发三张，选牌器不关 */
+      } else {
+        L.pick = i<4 ? "b"+(i+1) : "b4";
+        p.classList.remove("on"); /* 翻齐 / 转发完 / 河发完，停下来看建议 */
+      }
+    }
+    syncStreetActions();
+    buildLivePicker(); renderLiveCards(); liveRecommend();
+  });
+}
+function startDealNext(){
+  if(!holeReady()){
+    openHolePicker();
+    return;
+  }
+  const n=boardN();
+  if(n>=5) return;
+  L.pick="b"+n; /* 下一张空位：翻0/1/2，转3，河4 */
+  document.getElementById("lvPicker").classList.add("on");
+  syncStreetActions();
+  renderLiveCards(); buildLivePicker(); liveRecommend();
+}
+function undoStreet(){
+  /* 只撤最后一张已发公共牌，前面的翻/转留着 */
+  let last=-1;
+  for(let i=4;i>=0;i--) if(L.board[i]!=null){ last=i; break; }
+  if(last<0) return;
+  L.board[last]=null;
+  L.pick="b"+last;
+  document.getElementById("lvPicker").classList.remove("on");
+  syncStreetActions();
+  renderLiveCards(); buildLivePicker(); liveRecommend();
+}
+function updateCompare(rec){
+  const el=document.getElementById("lvCompare");
+  if(!el) return;
+  const act=document.getElementById("lvActual").value;
+  const map={fold:["FOLD","弃"],call:["CALL","跟","混跟"],raise:["RAISE","LIMP / RAISE","BET","CHECK / BET"],jam:["JAM","RAISE"],check:["CHECK"],bet:["BET","RAISE"]};
+  const keys=map[act]||[];
+  const hit=keys.some(k=>String(rec).toUpperCase().includes(k) || rec.includes(k));
+  el.innerHTML = hit
+    ? `<h3>一致</h3><p>你的实际动作「${document.getElementById("lvActual").selectedOptions[0].text}」与引擎 ${rec} 同向。</p>`
+    : `<h3>偏离</h3><p>你当时选「${document.getElementById("lvActual").selectedOptions[0].text}」，引擎更倾向 ${rec}。复盘时看权益是否被泡沫 / 鱿鱼压力低估。</p>`;
+}
+function loadHands(){
+  try{return JSON.parse(localStorage.getItem("dx_hands")||"[]");}catch(e){return [];}
+}
+function renderHandLog(){
+  const list=loadHands();
+  const box=document.getElementById("handLog");
+  if(!box) return;
+  if(!list.length){box.innerHTML="<div class='hint'>还没有保存的手牌。</div>";return;}
+  box.innerHTML=list.slice().reverse().map((h,i)=>`
+    <div class="hrow">
+      <b>${h.fmt==="mtt"?"MTT":"鱿鱼"}</b>
+      <div>${h.hero||"?"} vs ${h.vil||"?"} · ${h.street} · 建议 ${h.rec} / 实际 ${h.actual}</div>
+      <button class="lvtag" data-load="${list.length-1-i}">打开</button>
+    </div>`).join("");
+  box.querySelectorAll("[data-load]").forEach(b=>b.onclick=()=>{
+    const h=loadHands()[+b.dataset.load];
+    if(!h) return;
+    L.heroCards=h.heroCards||[null,null];
+    L.board=h.board||[null,null,null,null,null];
+    document.getElementById("lvPot").value=h.pot||1.5;
+    document.getElementById("lvStack").value=h.stack||100;
+    document.getElementById("lvSize").value=h.size||2.5;
+    document.getElementById("lvCall").value=h.call||2.5;
+    document.getElementById("lvAct").value=h.act||"open";
+    document.getElementById("lvActual").value=h.actualKey||"call";
+    renderLiveCards(); buildLivePicker(); liveRecommend();
+  });
+}
+function saveHand(){
+  const list=loadHands();
+  list.push({
+    t:Date.now(), fmt:APP.fmt,
+    hero:holeToCode(L.heroCards[0],L.heroCards[1]),
+    vil:document.getElementById("lvVillain").value,
+    street:liveStreet(),
+    rec:document.getElementById("lvAction").textContent,
+    actual:document.getElementById("lvActual").selectedOptions[0].text,
+    actualKey:document.getElementById("lvActual").value,
+    heroCards:L.heroCards.slice(), board:L.board.slice(),
+    pot:+document.getElementById("lvPot").value,
+    stack:+document.getElementById("lvStack").value,
+    size:+document.getElementById("lvSize").value,
+    call:+document.getElementById("lvCall").value,
+    act:document.getElementById("lvAct").value
+  });
+  localStorage.setItem("dx_hands", JSON.stringify(list.slice(-40)));
+  renderHandLog();
+}
+function fmtName(){return APP.fmt==="squid"?"鱿鱼桌":APP.fmt==="mtt"?"MTT / 无鱿鱼":"";}
+function workName(){return APP.work==="review"?"复盘模式":APP.work==="live"?"跟进模式":APP.work==="lab"?"实验室":"";}
+function parentPage(page){
+  if(page==="tool") return "lab";
+  if(page==="lab" || page==="app") return "work";
+  if(page==="work") return "home";
+  if(page==="home") return "home";
+  return "auth";
+}
+function goBack(){
+  if(APP.page==="home") return;
+  goPage(parentPage(APP.page));
+}
+function renderCrumb(){
+  const el=document.getElementById("crumb");
+  const parts=["<button type='button' data-go='home'>大象Poker</button>"];
+  if(APP.page!=="home"){
+    if(APP.fmt) parts.push("›", `<button type='button' data-go='work'>${fmtName()}</button>`);
+    if(APP.page==="app" && APP.work) parts.push("›", `<b>${workName()}</b>`);
+    if(APP.page==="lab") parts.push("›", `<b>实验室</b>`);
+    if(APP.page==="tool") parts.push("›", `<button type='button' data-go='lab'>实验室</button>`, "›",
+      `<b>${APP.labTool==="squid"?"鱿鱼压力":APP.labTool==="preflop"?"翻前 GTO":"河牌 CFR"}</b>`);
+  }
+  el.innerHTML=parts.join(" ");
+  el.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>goPage(b.dataset.go));
+}
+function goPage(page){
+  const sess=currentSession();
+  APP.user=sess?sess.user:null;
+  if(!APP.user && page!=="auth") page="auth";
+  if(APP.user && page==="auth") page="home";
+  APP.page=page;
+  ["auth","home","work","app","lab","tool"].forEach(p=>{
+    const n=document.getElementById("page-"+p);
+    if(n) n.classList.toggle("on", p===page);
+  });
+  document.querySelectorAll(".mtt-only").forEach(el=>el.style.display=APP.fmt==="mtt"?"":"none");
+  document.querySelectorAll(".review-only").forEach(el=>el.style.display=APP.work==="review"?"":"none");
+  document.querySelectorAll(".live-only").forEach(el=>el.style.display=APP.work==="live"?"":"none");
+  const labSquid=document.getElementById("labSquidTile");
+  if(labSquid) labSquid.style.display=APP.fmt==="squid"?"":"none";
+  if(page==="tool"){
+    ["squid","preflop","river"].forEach(v=>{
+      const n=document.getElementById("view-"+v);
+      if(n) n.classList.toggle("on", v===APP.labTool);
+    });
+  }
+  const badge=document.getElementById("fmtBadge");
+  const sub=document.getElementById("headerSub");
+  refreshUserChip();
+  if(page==="auth"){badge.textContent="请登录"; sub.textContent="注册或登录后才能进入解算器";}
+  else if(page==="home"){badge.textContent="大象Poker"; sub.textContent="第一层：选择赛制";}
+  else if(page==="work"){badge.textContent=fmtName(); sub.textContent="第二层：选择跟进或复盘"; document.getElementById("workHint").textContent=`当前赛制：${fmtName()}。选一种用法进入独立工作台。`;}
+  else if(page==="app"){badge.textContent=fmtName()+" · "+workName(); sub.textContent=APP.work==="review"?"复盘工作台":"跟进工作台";}
+  else if(page==="lab"){badge.textContent=fmtName()+" · 实验室"; sub.textContent="选择一个工具页";}
+  else {badge.textContent=fmtName()+" · 实验室"; sub.textContent="工具页";}
+  renderCrumb();
+  const bar=document.getElementById("backBar");
+  if(bar) bar.classList.toggle("on", page!=="home" && page!=="auth");
+  const back=document.getElementById("btnBack");
+  if(back){
+    const names={work:"返回第一层 · 赛制",app:"返回第二层 · 用法",lab:"返回第二层 · 用法",tool:"返回实验室",home:"返回登录"};
+    back.textContent="← "+(names[page]||"返回上一层");
+  }
+  if(page==="app" && typeof liveRecommend==="function") liveRecommend();
+  if(page==="app" && APP.work==="review") renderHandLog();
+}
+function applyLayers(){ goPage(APP.page==="home"?"home":APP.page); }
+function initLive(){
+  const sel=document.getElementById("lvN");
+  if(!sel.options.length){
+    for(let i=2;i<=9;i++){const o=document.createElement("option");o.value=i;o.textContent=i+" 人";if(i===8)o.selected=true;sel.appendChild(o);}
+  }
+  L.n=+sel.value; L.btn=Math.max(0,L.n-3); L.hero=L.btn;
+  renderLiveSeats(); renderLiveCards(); buildLivePicker(); liveRecommend();
+}
+
+function syncCallDefault(){
+  const act=document.getElementById("lvAct").value;
+  const size=+document.getElementById("lvSize").value||0;
+  if(act==="open"||act==="limp"){
+    document.getElementById("lvCall").value=size;
+    setPotFields(+(1.5+size).toFixed(2)); /* 盲注 1.5 + 开池已进池 */
+  }
+  if(act==="3bet"){
+    document.getElementById("lvCall").value=size;
+    setPotFields(+(4+size).toFixed(2));
+  }
+  if(act==="bet"||act==="raise"||act==="jam") document.getElementById("lvCall").value=size;
+}
+
+/* ---------- wiring ---------- */
+
+function setPotFields(v){
+  const p=document.getElementById("lvPot");
+  if(p) p.value=v;
+}
+function nextHand(){
+  L.btn = (L.btn + 1) % L.n;
+  L.heroCards=[null,null];
+  L.board=[null,null,null,null,null];
+  L.folded=new Set();
+  L.pick="h0";
+  const act=document.getElementById("lvAct"); if(act) act.value="open";
+  const sz=document.getElementById("lvSize"); if(sz) sz.value="2.5";
+  const cl=document.getElementById("lvCall"); if(cl) cl.value="2.5";
+  setPotFields(startPotBB());
+  const pk=document.getElementById("lvPicker"); if(pk) pk.classList.add("on");
+  renderLiveSeats(); renderLiveCards(); buildLivePicker(); liveRecommend();
+}
+function openHolePicker(){
+  L.pick="h0";
+  document.getElementById("lvPicker")?.classList.add("on");
+  buildLivePicker();
+}
+function bindNav(){
+  document.querySelectorAll("[data-go]").forEach(b=>{
+    b.onclick=()=>goPage(b.dataset.go);
+  });
+  document.querySelectorAll("[data-fmt]").forEach(b=>{
+    b.onclick=()=>{ APP.fmt=b.dataset.fmt; goPage("work"); };
+  });
+  document.querySelectorAll("[data-work]").forEach(b=>{
+    b.onclick=()=>{ APP.work=b.dataset.work; if(APP.work==="lab") goPage("lab"); else { initLive(); goPage("app"); } };
+  });
+  document.querySelectorAll("[data-lab]").forEach(b=>{
+    b.onclick=()=>{ APP.labTool=b.dataset.lab; goPage("tool"); if(APP.labTool==="squid") squidSolve(); };
+  });
+  document.getElementById("btnBack")?.addEventListener("click", goBack);
+  document.getElementById("btnLogout")?.addEventListener("click", ()=>{ clearSession(); goPage("auth"); });
+}
+document.addEventListener("DOMContentLoaded", ()=>{
+  try{
+  bindNav();
+  try{ initPlayersSel(); }catch(e){}
+  try{ resetPlayers(); }catch(e){}
+  try{ initLive(); }catch(e){}
+  ["nPlayers","penalty","mode","handsLeft","squidExtra","firstDouble"].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.addEventListener("input", squidSolve);
+    if(el) el.addEventListener("change", squidSolve);
+  });
+  document.getElementById("lvN")?.addEventListener("change", ()=>{ L.n=+document.getElementById("lvN").value; initLive(); });
+  ["lvStack","lvPot","lvSize","lvCall","lvAct","lvVillain","lvVilState","lvAnteMode","lvMttAnte","lvBubble","lvLeft"].forEach(id=>{
+    const el=document.getElementById(id);
+    if(!el) return;
+    el.addEventListener("input", ()=>{ if(id==="lvAct"||id==="lvSize") syncCallDefault(); if(id==="lvAnteMode") applyAnteMode(); liveRecommend(); });
+    el.addEventListener("change", ()=>{ if(id==="lvAct"||id==="lvSize") syncCallDefault(); if(id==="lvAnteMode") applyAnteMode(); liveRecommend(); });
+  });
+  document.getElementById("lvDealNext")?.addEventListener("click", startDealNext);
+  document.getElementById("lvUndo")?.addEventListener("click", undoStreet);
+  document.getElementById("lvNextHand")?.addEventListener("click", nextHand);
+  document.getElementById("lvNextHand2")?.addEventListener("click", nextHand);
+  document.getElementById("lvSave")?.addEventListener("click", saveHand);
+  document.getElementById("lvActual")?.addEventListener("change", ()=>liveRecommend());
+  document.getElementById("btnGuest")?.addEventListener("click", ()=>enterGuest());
+  document.getElementById("btnLogin")?.addEventListener("click", ()=>{
+    try{
+      const err=doLogin(document.getElementById("authUser").value, document.getElementById("authPass").value);
+      const box=document.getElementById("authErr"); if(box) box.textContent=err||"";
+      if(!err) goPage("home");
+    }catch(e){ const box=document.getElementById("authErr"); if(box) box.textContent="登录失败，请改用「游客进入」。"; }
+  });
+  document.getElementById("btnReg")?.addEventListener("click", ()=>{
+    try{
+      const err=doRegister(document.getElementById("authUser").value, document.getElementById("authPass").value, document.getElementById("authPass2").value);
+      const box=document.getElementById("authErr"); if(box) box.textContent=err||"";
+      if(!err) goPage("home");
+    }catch(e){ const box=document.getElementById("authErr"); if(box) box.textContent="注册失败，请改用「游客进入」。"; }
+  });
+  document.getElementById("runPF")?.addEventListener("click", ()=>{ try{ runPreflopCFR(); }catch(e){ console.error(e);} });
+  document.getElementById("runRV")?.addEventListener("click", ()=>{ try{ runRiver(); }catch(e){ console.error(e);} });
+  }catch(e){ console.error(e); }
+  if(!currentSession()) setSession("游客");
+  goPage("home");
+});
+
+(function patchLabViews(){
+  const _go=goPage;
+  goPage=function(page){
+    _go(page);
+    if(page==="tool"){
+      ["squid","preflop","river"].forEach(v=>{
+        const n=document.getElementById("view-"+v);
+        if(n) n.style.display = (v===APP.labTool)?"":"none";
+      });
+    }
+  };
+})();
+
+</script>
+</body>
+</html>
