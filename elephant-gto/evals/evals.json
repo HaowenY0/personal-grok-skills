@@ -1,0 +1,20 @@
+{
+  "skill": "elephant-gto",
+  "test_cases": [
+    {
+      "name": "basic_gto_question",
+      "input": "半池下注时价值诈嘩比例是多少",
+      "assertions": ["Explains value:bluff ratio around 2:1 for half pot"]
+    },
+    {
+      "name": "project_reference",
+      "input": "用大象GTO分析这个局面",
+      "assertions": ["References Elephant GTO context if available"]
+    },
+    {
+      "name": "range_construction",
+      "input": "帮我构建BTN open range",
+      "assertions": ["Provides or discusses standard GTO preflop ranges"]
+    }
+  ]
+}

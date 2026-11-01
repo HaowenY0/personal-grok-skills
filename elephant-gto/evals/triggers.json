@@ -1,0 +1,9 @@
+{
+  "skill": "elephant-gto",
+  "test_cases": [
+    {"input": "大象GTO", "should_trigger": true},
+    {"input": "GTO 范围", "should_trigger": true},
+    {"input": "扑克策略分析", "should_trigger": true},
+    {"input": "今天天气", "should_trigger": false}
+  ]
+}
